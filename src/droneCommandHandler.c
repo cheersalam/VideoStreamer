@@ -53,7 +53,7 @@ int32_t sendCommand(int sockfd, const char *command, char *responseBuf, ssize_t 
         return -1;
     }
 
-	printf("%S:%S:%S Sending command = %s", __FILE__, __func__, __LINE__, command);
+	printf("%s:%s:%d Sending command = %s", __FILE__, __func__, __LINE__, command);
     n = write(sockfd, command, strlen(command) - 1);
     if (n < 0) { 
 		logErrorAndExit("ERROR writing to socket");
@@ -61,7 +61,7 @@ int32_t sendCommand(int sockfd, const char *command, char *responseBuf, ssize_t 
     
     n = read(sockfd, &responseBuf[0], responseBufLen);
     if (n < 0) {
-		printf("%S:%S:%S Response recieved = %s", __FILE__, __func__, __LINE__, responseBuf);
+		printf("%s:%s:%d Response recieved = %s", __FILE__, __func__, __LINE__, responseBuf);
 		logErrorAndExit("ERROR reading from socket");
     }
     return 0;
