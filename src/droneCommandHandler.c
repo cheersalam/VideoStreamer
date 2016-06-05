@@ -9,54 +9,60 @@
 #include <netdb.h> 
 #include "droneCommandHandler.h"
 
-void error(const char *msg)
+void logErrorAndExit(const char *msg)
 {
     perror(msg);
     exit(0);
 }
 
-int32_t startNetwork(char *droneIpAdd) {
-    struct sockaddr_in  serv_addr;
-    struct hostent      *server;
-    int32_t             sockfd;
+int32_t startNetwork(const char *droneIpAdd, uint16_t port, int *droneCommandfd) {
+	struct sockaddr_in  serv_addr	= {0};
+    struct hostent      *server		= NULL;
     
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        error("ERROR opening socket");
-        return -1;
+	*droneCommandfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (*droneCommandfd < 0) {
+		logErrorAndExit("ERROR socket call failed");
     }
     
     server = gethostbyname(droneIpAdd);
     if (server == NULL) {
-        fprintf(stderr, "ERROR, no such host\n");
-        exit(0);
+		logErrorAndExit("ERROR, no such host\n");
     }
     
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    memset((char *)&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+    memcpy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+	serv_addr.sin_port = htons(port);
 
-    if (connect(sockfd, (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) { 
-        error("ERROR connecting");
+    if (connect(*droneCommandfd, (struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
+		logErrorAndExit("ERROR connecting to Drone");
     }
     return 0;
 }
 
-int32_t sendCommand(int32_t sockfd, char *command, char **response) {
-    char buffer[256];
-    int32_t n = 0;
-    if (command == NULL && *response == NULL) {
+void stopNetwork(int sockfd) {
+	if (sockfd) {
+		close(sockfd);
+	}
+
+}
+
+int32_t sendCommand(int sockfd, const char *command, char *responseBuf, ssize_t responseBufLen) {
+    ssize_t n = 0;
+    if (command == NULL && responseBuf == NULL) {
         return -1;
     }
-    bzero(buffer, 256);
-    n = write(sockfd, buffer, strlen(buffer));
+
+	printf("%S:%S:%S Sending command = %s", __FILE__, __func__, __LINE__, command);
+    n = write(sockfd, command, strlen(command) - 1);
     if (n < 0) { 
-         error("ERROR writing to socket");
+		logErrorAndExit("ERROR writing to socket");
     }
     
-    n = read(sockfd,buffer,255);
+    n = read(sockfd, &responseBuf[0], responseBufLen);
     if (n < 0) {
-         error("ERROR reading from socket");
+		printf("%S:%S:%S Response recieved = %s", __FILE__, __func__, __LINE__, responseBuf);
+		logErrorAndExit("ERROR reading from socket");
     }
     return 0;
 }

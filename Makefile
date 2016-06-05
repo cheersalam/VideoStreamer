@@ -1,5 +1,6 @@
-SRCS=$(wildcard *.c)
-CFLAGS = -Wall
+SRCS=$(wildcard ./src/*.c)
+INCLUDES=./inc
+CFLAGS = -Wall -I$(INCLUDES)
 
 OBJS=$(SRCS:.c=.o)
 
