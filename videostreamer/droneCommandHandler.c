@@ -63,6 +63,6 @@ int32_t sendCommand(int sockfd, const char *command, char *responseBuf, ssize_t 
     if (n < 0) {
 		logErrorAndExit("ERROR reading from socket");
     }
-    printf("%s:%s:%d Response recieved = %s\n", __FILE__, __func__, __LINE__, responseBuf);
+    printf("%s:%s:%d Response received = %s\n", __FILE__, __func__, __LINE__, responseBuf);
     return 0;
 }
