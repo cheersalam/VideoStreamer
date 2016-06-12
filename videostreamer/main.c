@@ -46,11 +46,14 @@ int32_t main(int32_t argc, char *argv[]) {
 
 }
 
+void chunk(char *src, char *dst, int32_t len) {
+    memcpy(dst, src, len);
+}
 
-int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T handshakeData) {
-    int32_t     err = 0;
+int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData) {
 	int32_t     i = 0;
 	int32_t     r = 0;
+    char        value[256];
 	jsmn_parser p;
 	jsmntok_t   t[128]; /* We expect no more than 128 tokens */
 	jsmn_init(&p);
@@ -59,33 +62,47 @@ int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T handshakeData) {
 
 	r = jsmn_parse(&p, jsonStr, strlen(jsonStr), t, sizeof(t)/sizeof(t[0]));
 	if (r < 0) {
-		printf("Failed to parse JSON: %d\n", err);
-		return err;
+		printf("Failed to parse JSON: %d\n", r);
+		return r;
 	}
 
     /* Loop over all keys of the root object */
 	for (i = 1; i < r; i++) {
+        memset(value, 0, 256);
+        memcpy(value, jsonStr + t[i+1].start, t[i+1].end - t[i+1].start);
 		if (jsoneq(jsonStr, &t[i], "status") == 0) {
-			/* We may use strndup() to fetch string value */
-			printf("- Status: %.*s\n", t[i+1].end-t[i+1].start,
-					jsonStr + t[i+1].start);
+			printf("- Status: %.*s\n", t[i+1].end - t[i+1].start, jsonStr + t[i+1].start);
+            handshakeData->status = (int32_t)strtol(value, NULL, 0);
 			i++;
 		} else if (jsoneq(jsonStr, &t[i], "c2d_port") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("- c2d_port: %.*s\n", t[i+1].end-t[i+1].start,
-					jsonStr + t[i+1].start);
+			printf("- c2d_port: %.*s\n", t[i+1].end - t[i+1].start, jsonStr + t[i+1].start);
+            handshakeData->c2d_port = (int32_t)strtol(value, NULL, 0);
 			i++;
 		} else if (jsoneq(jsonStr, &t[i], "arstream_fragment_size") == 0) {
-			/* We may want to do strtol() here to get numeric value */
-			printf("- arstream_fragment_size: %.*s\n", t[i+1].end-t[i+1].start,
-					jsonStr + t[i+1].start);
+			printf("- arstream_fragment_size: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
+            handshakeData->arstream_fragment_size = (int32_t)strtol(value, NULL, 0);
+			i++;
+        } else if (jsoneq(jsonStr, &t[i], "arstream_fragment_maximum_number") == 0) {
+			printf("- arstream_fragment_size: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
+            handshakeData->arstream_fragment_maximum_number = (int32_t)strtol(value, NULL, 0);
+			i++;
+        } else if (jsoneq(jsonStr, &t[i], "arstream_max_ack_interval") == 0) {
+			printf("- arstream_max_ack_interval: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
+            handshakeData->arstream_max_ack_interval = (int32_t)strtol(value, NULL, 0);
+			i++;
+        } else if (jsoneq(jsonStr, &t[i], "c2d_update_port") == 0) {
+			printf("- c2d_update_port: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
+            handshakeData->c2d_update_port = (int32_t)strtol(value, NULL, 0);
+			i++;
+        } else if (jsoneq(jsonStr, &t[i], "c2d_user_port") == 0) {
+			printf("- c2d_user_port: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
+            handshakeData->c2d_user_port = (int32_t)strtol(value, NULL, 0);
 			i++;
 		} else {
 			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
 					jsonStr + t[i].start);
 		}
 	}
-
-
+    return 0;
 }
 
