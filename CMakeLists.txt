@@ -77,6 +77,7 @@ ExternalProject_Add(
                     jsmn
                     GIT_REPOSITORY https://github.com/zserge/jsmn.git
                     GIT_TAG master
+                    UPDATE_COMMAND git pull
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/jsmn
                     BUILD_IN_SOURCE 1
                     CONFIGURE_COMMAND ""
