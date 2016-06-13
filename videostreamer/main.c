@@ -28,6 +28,9 @@ int32_t main(int32_t argc, char *argv[]) {
 	int droneCommandfd = 0;;
 	int32_t err = 0;
 	char response[1024] = {0};
+    pthread_t recieverThread;
+    pthread_t senderThread;
+   
     HANDSHAKE_DATA_T handshakeData = {0};
 	
 	err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
@@ -44,10 +47,6 @@ int32_t main(int32_t argc, char *argv[]) {
    
    parseHandshakeResponse(&response, &handshakeData);
 
-}
-
-void chunk(char *src, char *dst, int32_t len) {
-    memcpy(dst, src, len);
 }
 
 int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData) {
