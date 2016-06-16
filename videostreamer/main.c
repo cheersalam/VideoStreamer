@@ -5,16 +5,12 @@
 #include "droneCommandHandler.h"
 #include "config.h"
 #include "jsmn.h"
+#include "pthread.h"
+#include "streamReceiver.h"
+#include "common.h"
 
-typedef struct HANDSHAKE_DATA_T{
-    int32_t status;
-    int32_t c2d_port;
-    int32_t arstream_fragment_size;
-    int32_t arstream_fragment_maximum_number;
-    int32_t arstream_max_ack_interval;
-    int32_t c2d_update_port;
-    int32_t c2d_user_port;
-}HANDSHAKE_DATA_T;
+
+int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData);
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
@@ -33,6 +29,7 @@ int32_t main(int32_t argc, char *argv[]) {
    
     HANDSHAKE_DATA_T handshakeData = {0};
 	
+#if 0
 	err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
     if (err) {
         printf("startNetwork Failed\n");
@@ -45,7 +42,14 @@ int32_t main(int32_t argc, char *argv[]) {
         return 0;
     }
    
-   parseHandshakeResponse(&response, &handshakeData);
+   parseHandshakeResponse(response, &handshakeData);
+#endif
+   err = pthread_create(&recieverThread, NULL, startReceiver, D2C_PORT);
+   if(err) {
+       printf("Thread creation failed\n");
+   }
+
+   pthread_join(recieverThread, NULL);
 
 }
 
