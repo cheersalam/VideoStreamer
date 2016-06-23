@@ -27,7 +27,8 @@ int32_t main(int32_t argc, char *argv[]) {
     pthread_t recieverThread;
     pthread_t senderThread;
    
-    HANDSHAKE_DATA_T handshakeData = {0};
+    HANDSHAKE_DATA_T handshakeData  = {0};
+    RECEIVER_DATA_T  receiverData   = {0};
 	
 #if 0
 	err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
@@ -44,6 +45,7 @@ int32_t main(int32_t argc, char *argv[]) {
    
    parseHandshakeResponse(response, &handshakeData);
 #endif
+   receiverData.running = 1;
    err = pthread_create(&recieverThread, NULL, startReceiver, D2C_PORT);
    if(err) {
        printf("Thread creation failed\n");
