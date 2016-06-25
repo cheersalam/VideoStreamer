@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
@@ -20,17 +21,14 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	return -1;
 }
 
-int32_t main(int32_t argc, char *argv[]) {
-	int droneCommandfd = 0;;
-	int32_t err = 0;
-	char response[1024] = {0};
-    pthread_t recieverThread;
-    pthread_t senderThread;
-   
+int32_t main(){
+	int droneCommandfd              = 0;;
+	int32_t err                     = 0;
+	char response[1024]             = {0};
+    void *receiverHandle            = NULL;
+    RECEIVER_CONFIG_T config        = {0};
     HANDSHAKE_DATA_T handshakeData  = {0};
-    RECEIVER_DATA_T  receiverData   = {0};
 	
-#if 0
 	err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
     if (err) {
         printf("startNetwork Failed\n");
@@ -43,16 +41,19 @@ int32_t main(int32_t argc, char *argv[]) {
         return 0;
     }
    
-   parseHandshakeResponse(response, &handshakeData);
-#endif
-   receiverData.running = 1;
-   err = pthread_create(&recieverThread, NULL, startReceiver, D2C_PORT);
-   if(err) {
-       printf("Thread creation failed\n");
-   }
+    parseHandshakeResponse(response, &handshakeData);
 
-   pthread_join(recieverThread, NULL);
+    config.port = 43210;
+    receiverHandle = startReceiver(&config);
+    if (NULL == receiverHandle) {
+        printf("Starting receiver failed. Exiting...\n");
+        return 0;
+    }
 
+    while(1) {
+        sleep(1);
+        printf("Receiver thread status = %d\n", isRunning(receiverHandle));
+    }
 }
 
 int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData) {
