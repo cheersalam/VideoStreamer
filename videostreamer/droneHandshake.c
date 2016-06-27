@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-#include "droneCommandHandler.h"
+#include "droneHandshake.h"
 
 void logErrorAndExit(const char *msg)
 {
