@@ -27,8 +27,10 @@ int32_t main(){
 	char response[1024]             = {0};
     void *receiverHandle            = NULL;
     void *handshakeHandle           = NULL;
+    void *commandHandle           = NULL;
     RECEIVER_CONFIG_T config        = {0};
     HANDSHAKE_DATA_T handshakeData  = {0};
+	char buffer[] = {0x04, 0x0b, 0x01, 0x0c, 0x00, 0x00, 0x00, 0x01, 0x15, 0x00, 0x00, 0x01};
 
     err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
     if (err) {
@@ -36,7 +38,7 @@ int32_t main(){
         return 0;
     }
 
-	err = sendCommand(droneCommandfd, DRONE_HANDSHAKE_REQ, response, 1024 - 1);
+	err = startHandshake(droneCommandfd, DRONE_HANDSHAKE_REQ, response, 1024 - 1);
     if(err) {
         printf("send command failed. Exiting\n");
         return 0;
@@ -51,6 +53,12 @@ int32_t main(){
         return 0;
     }
 
+	commandHandle = startDroneCommandHandler(54321);
+	if(NULL == commandHandle) {
+		return 0;
+	}
+
+	sendCommand(commandHandle, buffer, 0x0c);
     while(1) {
         sleep(1);
         printf("Receiver thread status = %d\n", isRunning(receiverHandle));

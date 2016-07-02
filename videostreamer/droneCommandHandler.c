@@ -33,8 +33,6 @@ void *startDroneCommandHandlerThread(void *args) {
     COMMAND_DATA_T *commandData = args; 
      
     printf("Starting command handler\n");
-    struct sockaddr_in serverAddr, clientAddr;
-    struct sockaddr_storage serverStorage;
     socklen_t addr_size;
     
     /*Create UDP socket*/
@@ -46,13 +44,13 @@ void *startDroneCommandHandlerThread(void *args) {
     }
 
     /*Configure settings in address struct*/
-    memset(&serverAddr, 0, sizeof(serverAddr));  
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(commandData->port);
-    serverAddr.sin_addr.s_addr = inet_addr("192.168.42.1");
+    memset(&commandData->serverAddr, 0, sizeof(commandData->serverAddr));  
+    commandData->serverAddr.sin_family = AF_INET;
+    commandData->serverAddr.sin_port = htons(commandData->port);
+    commandData->serverAddr.sin_addr.s_addr = inet_addr("192.168.42.1");
 
     /*Bind socket with address struct*/
-    err = bind(commandData->fd, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
+    err = bind(commandData->fd, (struct sockaddr *) &commandData->serverAddr, sizeof(commandData->serverAddr));
     if(err < 0) {
         printf("ERROR Bind failed\n");
         strncpy(commandData->shortErrMsg, "ERROR Bind failed", 511);
@@ -61,14 +59,14 @@ void *startDroneCommandHandlerThread(void *args) {
     printf("Bind pass\n");
 
     /*Initialize size variable to be used later on*/
-    addr_size = sizeof(serverStorage);
+    addr_size = sizeof(commandData->serverAddr);
 
     commandData->running = 1;
     while(commandData->running){
         printf("Waiting for messages\n");
         /* Try to receive any incoming UDP datagram. Address and port of 
         requesting client will be stored on serverStorage variable */
-        nBytes = recvfrom(commandData->fd,buffer,1024,0,(struct sockaddr *)&serverStorage, &addr_size);
+        nBytes = recvfrom(commandData->fd,buffer,1024,0,NULL, NULL);
 
         /*Convert message received to uppercase*/
         // for(i=0;i<nBytes-1;i++)
@@ -86,6 +84,13 @@ int32_t isCommandDataHandlerRunning(void *handle) {
     COMMAND_DATA_T *data = handle; 
     
     return data->running;
+}
+
+
+int32_t sendCommand(void *handle, char *buffer, int32_t nBytes) {
+    assert(handle);
+    COMMAND_DATA_T *data = handle; 
+	sendto(data->fd ,buffer, nBytes, 0, (struct sockaddr *)&data->serverAddr, sizeof(data->serverAddr));
 }
 
 

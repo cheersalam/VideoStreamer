@@ -47,7 +47,7 @@ void stopNetwork(int sockfd) {
 
 }
 
-int32_t sendCommand(int sockfd, const char *command, char *responseBuf, ssize_t responseBufLen) {
+int32_t startHandshake(int sockfd, const char *command, char *responseBuf, ssize_t responseBufLen) {
     ssize_t n = 0;
     if (command == NULL && responseBuf == NULL) {
         return -1;
