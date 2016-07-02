@@ -22,7 +22,7 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 }
 
 int32_t main(){
-int droneCommandfd              = 0;;
+    int droneCommandfd              = 0;;
 	int32_t err                     = 0;
 	char response[1024]             = {0};
     void *receiverHandle            = NULL;
@@ -30,7 +30,7 @@ int droneCommandfd              = 0;;
     RECEIVER_CONFIG_T config        = {0};
     HANDSHAKE_DATA_T handshakeData  = {0};
 
-     err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
+    err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
     if (err) {
         printf("startNetwork Failed\n");
         return 0;
@@ -40,8 +40,7 @@ int droneCommandfd              = 0;;
     if(err) {
         printf("send command failed. Exiting\n");
         return 0;
-    }	
-
+    }	 
    
     parseHandshakeResponse(response, &handshakeData);
 
