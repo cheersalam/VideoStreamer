@@ -9,6 +9,12 @@
 #include <netdb.h> 
 #include "droneHandshake.h"
 
+typedef struct HANDSHAKE_DATA {
+	char droneIpAdd[64];
+	uint16_t port;
+	int fd;
+}HANDSHAKE_DATA;
+
 void logErrorAndExit(const char *msg)
 {
     perror(msg);
@@ -16,17 +22,27 @@ void logErrorAndExit(const char *msg)
 }
 
 int32_t startNetwork(const char *droneIpAdd, uint16_t port, int *droneCommandfd) {
-	struct sockaddr_in  serv_addr	= {0};
-    struct hostent      *server		= NULL;
-    
-	*droneCommandfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (*droneCommandfd < 0) {
-		logErrorAndExit("ERROR socket call failed");
+	struct sockaddr_in serv_addr		= {0};
+    struct hostent *server				= NULL;
+	HANDSHAKE_DATA	*handshakeData = NULL;
+
+	handshakeData = (HANDSHAKE_DATA *)malloc(sizeof(HANDSHAKE_DATA));
+	if (NULL == handshakeData) {
+		return NULL;
+	}
+	memset(handshakeData, 0, sizeof(HANDSHAKE_DATA));
+	strncpy(handshakeData->droneIpAdd, droneCommandfd, 64);
+
+	handshakeData->fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (handshakeData->fd < 0) {
+		printf("ERROR socket call failed\n");
+		return NULL;
     }
     
-    server = gethostbyname(droneIpAdd);
+    server = gethostbyname(handshakeData->droneIpAdd);
     if (server == NULL) {
-		logErrorAndExit("ERROR, no such host\n");
+		printf("ERROR, no such host\n");
+		return NULL;
     }
     
     memset((char *)&serv_addr, 0, sizeof(serv_addr));
