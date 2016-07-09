@@ -5,6 +5,7 @@ set(PROJECT_NAME "BebopVideoStreamer")
 project (${PROJECT_NAME})
 
 
+
 # TODO: The version number
 
 #------------------------------------------------------------------------------
