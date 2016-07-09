@@ -71,27 +71,27 @@ else()
 endif()
 
 #------------------------------------------------------------------------------
-# External Project - jsmn - json parser library
+# External Project - cJSON - json parser library
 #------------------------------------------------------------------------------
 include(ExternalProject)
 ExternalProject_Add(
-                    jsmn
-                    GIT_REPOSITORY https://github.com/zserge/jsmn.git
+                    cJSON
+                    GIT_REPOSITORY https://github.com/DaveGamble/cJSON
                     GIT_TAG master
                     UPDATE_COMMAND git pull
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/jsmn
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/cJSON
                     BUILD_IN_SOURCE 1
                     CONFIGURE_COMMAND ""
                     BUILD_COMMAND make
-                    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ./jsmn.h "${PROJECT_BINARY_DIR}/include"
-                    && ${CMAKE_COMMAND} -E copy ./libjsmn.a "${PROJECT_BINARY_DIR}/lib")
+                    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ./cJSON.h "${PROJECT_BINARY_DIR}/include"
+                    && ${CMAKE_COMMAND} -E copy ./libcjson.a "${PROJECT_BINARY_DIR}/lib")
 
 
 
 #------------------------------------------------------------------------------
-# Adding jsmn lib
+# Adding cJSON lib
 #------------------------------------------------------------------------------
-set(JSON_PARSER_LIB libjsmn.a)
+set(JSON_PARSER_LIB libcjson.a)
 
 #------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
