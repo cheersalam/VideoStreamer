@@ -1,13 +1,53 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h> 
 #include "droneHandshake.h"
+#include "tcpClientSocket.h"
+#include "cJSON.h"
+
+char *convertToJson(HANDSHAKE_REQ_T *handshakeRequest) {
+	cJSON *root = NULL;
+	root = cJSON_CreateObject();
+	cJSON_AddNumberToObject(root, "d2c_port", handshakeRequest->d2c_port);
+	cJSON_AddStringToObject(root, "controller_name", handshakeRequest->controller_name);
+	cJSON_AddStringToObject(root, "controller_type", handshakeRequest->controller_type);
+	char *ptr = cJSON_Print(root);
+	cJSON_Delete(root);
+	return ptr;
+}
+
+void * handshakeWithdrone(const char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *handshakeData) {
+	void *handshakeHandler = NULL;
+	char *jsonObject = NULL;
+	int32_t bytesSent = 0;
+	HANDSHAKE_REQ_T handshakeRequest = { 0 };
+
+	handshakeHandler = initUdpClientSocket(dronePort, droneIp);
+	if (NULL == handshakeHandler) {
+		return NULL;
+	}
+
+	strncpy(handshakeRequest.controller_name, CONTROLLER_NAME, 64);
+	strncpy(handshakeRequest.controller_type, CONTROLLER_TYPE, 64);
+	handshakeRequest.d2c_port = D2C_PORT;
+
+	jsonObject = convertToJson(&handshakeRequest);
+	if (NULL == jsonObject) {
+		printf("Json parsing failed \n");
+		closeTcpClient(handshakeHandler);
+		return NULL;
+	}
+
+	bytesSent = sendDataToTcpServer(handshakeHandler, jsonObject, strlen(jsonObject));
+	if (0 == bytesSent) {
+		free(jsonObject);
+		closeTcpClient(handshakeHandler);
+		return NULL;
+	}
+	return handshakeHandler;
+}
+
+
+
+
+
 
 typedef struct HANDSHAKE_DATA {
 	char droneIpAdd[64];
