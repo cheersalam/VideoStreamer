@@ -57,7 +57,7 @@ void *initTcpClientSocket(uint16_t port, char *hostname) {
 	tcpSocketData->serveraddr.sin_port = htons(port);
 	memcpy((char *)&tcpSocketData->serveraddr.sin_addr.s_addr, (char *)server->h_addr, server->h_length);
 
-	if (connect(tcpSocketData->fd, &tcpSocketData->serveraddr, sizeof(tcpSocketData->serveraddr)) < 0) {
+	if (connect(tcpSocketData->fd, (struct sockaddr *)&tcpSocketData->serveraddr, sizeof(tcpSocketData->serveraddr)) < 0) {
 		printf("Connect failed for %s\n", hostname);
 		free(tcpSocketData);
 		return NULL;
@@ -83,7 +83,7 @@ void *clientThread(void *args) {
 	addrSize = sizeof(udpSocketData->serveraddr);
 	udpSocketData->isRunning = 1;
 	while (udpSocketData->isRunning) {
-		nBytes = recv(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, MSG_WAITALL);
+		nBytes = recv(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, 0);
 		if (nBytes < 0) {
 			printf("ERROR in read\n");
 		}
@@ -98,14 +98,39 @@ int32_t sendDataToTcpServer(void *handle, char *buffer, int32_t bufLen) {
 	TCP_SOCKET_T *udpSocketData = handle;
 
 	if (NULL == buffer) {
-		return 0;
+		return -1;
 	}
 
 	addrSize = sizeof(udpSocketData->serveraddr);
 	nBytes = write(udpSocketData->fd, buffer, bufLen);
 	if (nBytes < 0) {
 		printf("ERROR in sendto\n");
+        return -1;
 	}
+	return nBytes;
+}
+
+int32_t sendSyncDataToTcpServer(void *handle, char *inBuf, int32_t inBufLen, char *outBuf, int32_t *outBufLen ) {
+	int32_t addrSize = 0;
+	int32_t nBytes;
+	TCP_SOCKET_T *udpSocketData = handle;
+
+    assert(inBuf && outBuf);
+
+	addrSize = sizeof(udpSocketData->serveraddr);
+	nBytes = write(udpSocketData->fd, inBuf, inBufLen);
+	if (nBytes < 0) {
+		printf("ERROR in sendto\n");
+        return -1;
+	}
+    
+    nBytes = recv(udpSocketData->fd, outBuf, MAX_RECV_BUF_LEN, 0);
+    if (nBytes < 0) {
+        printf("ERROR in read\n");
+        return -1;
+    }
+	printf("Bytes Received = %s\n", outBuf);
+    *outBufLen = nBytes;
 	return nBytes;
 }
 

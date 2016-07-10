@@ -17,6 +17,8 @@ void * handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *h
 	void *handshakeHandler = NULL;
 	char *jsonObject = NULL;
 	int32_t bytesSent = 0;
+    char handshakeResponse[1024 * 1024] = {0};
+    int32_t handshakeResLen = 0;
 	HANDSHAKE_REQ_T handshakeRequest = { 0 };
 
     printf("%s:%s:%d\n", __FILE__, __func__, __LINE__ );
@@ -37,12 +39,13 @@ void * handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *h
 		return NULL;
 	}
 
-	bytesSent = sendDataToTcpServer(handshakeHandler, jsonObject, strlen(jsonObject));
+	bytesSent = sendSyncDataToTcpServer(handshakeHandler, jsonObject, strlen(jsonObject), handshakeResponse, &handshakeResLen);
 	if (0 == bytesSent) {
 		free(jsonObject);
 		closeTcpClient(handshakeHandler);
 		return NULL;
 	}
+    printf("handshake data %s\n", handshakeResponse);
 	return handshakeHandler;
 }
 

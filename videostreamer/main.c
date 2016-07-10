@@ -25,8 +25,8 @@ int32_t main() {
 	int32_t err = 0;
     void *handshakeHandle = NULL;
 	HANDSHAKE_DATA_T handshakeData = {0};
-	char *droneIp = "192.168.42.1";
-	uint32_t dronePort = 44444;
+	char *droneIp = "127.0.0.1";//"192.168.42.1";
+	uint32_t dronePort = 5000;//44444;
 
 	handshakeHandle = handshakeWithdrone(droneIp, dronePort, &handshakeData);
 
