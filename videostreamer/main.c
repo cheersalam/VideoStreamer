@@ -23,12 +23,20 @@ int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData);
 
 int32_t main() {
 	int32_t err = 0;
+    void *handshakeHandle = NULL;
 	HANDSHAKE_DATA_T handshakeData = {0};
-	const char *droneIp = "192.168.42.1";
+	char *droneIp = "192.168.42.1";
 	uint32_t dronePort = 44444;
 
-	err = handshakeWithdrone(droneIp, dronePort, &handshakeData);
+	handshakeHandle = handshakeWithdrone(droneIp, dronePort, &handshakeData);
 
+    if (NULL == handshakeHandle) 
+    {
+        printf("Handshake failed. Exit\n");
+        return 0;
+    }
+    while(1)
+        sleep(1);
 }
 
 //int32_t oldmain(){

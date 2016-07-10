@@ -1,5 +1,7 @@
-#include "udpCLientSocket.h"
+#include "udpServerSocket.h"
+#include <arpa/inet.h>
 #include <pthread.h>
+#include <assert.h>
 
 #define MAX_RECV_BUF_LEN (1024 * 1024)
 
@@ -24,7 +26,7 @@ void *initUdpServerSocket(uint16_t port, char *hostname) {
 		printf("ERROR malloc error\n");
 		return NULL;
 	}
-	memset(udpSocketData, 0, sizeof(UDP_SOCKET_T));
+	memset((void *)udpSocketData, 0, sizeof(UDP_SOCKET_T));
 	udpSocketData->port = port;
 
 	udpSocketData->fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -37,14 +39,14 @@ void *initUdpServerSocket(uint16_t port, char *hostname) {
 	optval = 1;//enable
 	setsockopt(udpSocketData->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(optval));
 
-	memset(udpSocketData->serveraddr, 0, sizeof(udpSocketData->serveraddr));
-	udpSocketData->serveraddr->sin_family = AF_INET;
-	udpSocketData->serveraddr->sin_port = htons(port);
-	udpSocketData->serveraddr->sin_addr.s_addr = htonl(INADDR_ANY);
+	memset((char *)&udpSocketData->serveraddr, 0, sizeof(udpSocketData->serveraddr));
+	udpSocketData->serveraddr.sin_family = AF_INET;
+	udpSocketData->serveraddr.sin_port = htons(port);
+	udpSocketData->serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(udpSocketData->fd, (struct sockaddr *)&udpSocketData->serveraddr, sizeof(udpSocketData->serveraddr)) < 0) {
 		printf("ERROR on binding");
-		(udpSocketData);
+		free(udpSocketData);
 		return NULL;
 	}
 
@@ -60,7 +62,7 @@ void *initUdpServerSocket(uint16_t port, char *hostname) {
 void *serverThread(void *args) {
 	UDP_SOCKET_T *udpSocketData = args;
 	int32_t nBytes = 0;
-	int32_t addrSize = 0;
+	uint32_t addrSize = 0;
 	unsigned char buffer[MAX_RECV_BUF_LEN];
 	struct sockaddr_in clientaddr; /* client addr */
 	struct hostent *hostp;
@@ -69,7 +71,7 @@ void *serverThread(void *args) {
 	addrSize = sizeof(clientaddr);
 	udpSocketData->isRunning = 1;
 	while (udpSocketData->isRunning) {
-		nBytes = recvfrom(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, 0, &clientaddr, &addrSize);
+		nBytes = recvfrom(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, 0, (struct sockaddr *)&clientaddr, &addrSize);
 		if (nBytes < 0) {
 			printf("ERROR in recvfrom\n");
 		}
@@ -91,7 +93,6 @@ void *serverThread(void *args) {
 int32_t sendUdpDataToClient(void *handle, void *client, char *buffer, int32_t bufLen) {
 	int32_t addrSize = 0;
 	int32_t nBytes = 0;
-	int32_t addrSize = 0;
 	UDP_SOCKET_T *udpSocketData = handle;
 	struct sockaddr_in *clientaddr = client;
 
@@ -100,9 +101,9 @@ int32_t sendUdpDataToClient(void *handle, void *client, char *buffer, int32_t bu
 	}
 
 	addrSize = sizeof(struct sockaddr_in);
-	nBytes = sendto(udpSocketData->fd, buffer, bufLen, 0, clientaddr, addrSize);
+	nBytes = sendto(udpSocketData->fd, buffer, bufLen, 0, (const struct sockaddr *)clientaddr, addrSize);
 	if (nBytes < 0) {
-		error("ERROR in sendto");
+		printf("ERROR in sendto\n");
 	}
 	return nBytes;
 }

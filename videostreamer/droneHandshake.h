@@ -27,7 +27,7 @@ typedef struct HANDSHAKE_REQ_T {
 	char controller_type[64];
 }HANDSHAKE_REQ_T;
 
-int32_t handshakeWithdrone(const char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *handshakeData);
+void *handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *handshakeData);
 
 int32_t startNetwork(const char *droneIpAdd, uint16_t port, int *droneCommandfd);
 int32_t startHandshake(int sockfd, const char *command, char *responseBuf, ssize_t responseBufLen);

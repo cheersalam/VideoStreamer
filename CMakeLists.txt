@@ -1,4 +1,7 @@
+# Mohammad Alam
+# cheersalam@gmail.com
 # cmake file
+
 
 cmake_minimum_required (VERSION 2.8)
 set(PROJECT_NAME "BebopVideoStreamer")
@@ -91,7 +94,7 @@ ExternalProject_Add(
 #------------------------------------------------------------------------------
 # Adding cJSON lib
 #------------------------------------------------------------------------------
-set(JSON_PARSER_LIB libcjson.a)
+set(JSON_PARSER_LIB libcjson.a -lm)
 
 #------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
@@ -107,8 +110,12 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 #------------------------------------------------------------------------------
 # Sub Directories 
 #------------------------------------------------------------------------------
-#cJSON Library
+add_subdirectory (socklib) 
+set(SOCK_LIB libsocklib.a)
+
 add_subdirectory (videostreamer) 
+
+
 
 #------------------------------------------------------------------------------
 # Configuration Summary 

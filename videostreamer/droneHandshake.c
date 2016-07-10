@@ -13,17 +13,19 @@ char *convertToJson(HANDSHAKE_REQ_T *handshakeRequest) {
 	return ptr;
 }
 
-void * handshakeWithdrone(const char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *handshakeData) {
+void * handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *handshakeData) {
 	void *handshakeHandler = NULL;
 	char *jsonObject = NULL;
 	int32_t bytesSent = 0;
 	HANDSHAKE_REQ_T handshakeRequest = { 0 };
 
-	handshakeHandler = initUdpClientSocket(dronePort, droneIp);
+    printf("%s:%s:%d\n", __FILE__, __func__, __LINE__ );
+	handshakeHandler = initTcpClientSocket(dronePort, droneIp);
 	if (NULL == handshakeHandler) {
 		return NULL;
 	}
 
+    printf("%s:%s:%d Sending Handshake request\n", __FILE__, __func__, __LINE__ );
 	strncpy(handshakeRequest.controller_name, CONTROLLER_NAME, 64);
 	strncpy(handshakeRequest.controller_type, CONTROLLER_TYPE, 64);
 	handshakeRequest.d2c_port = D2C_PORT;
@@ -46,7 +48,7 @@ void * handshakeWithdrone(const char *droneIp, uint16_t dronePort, HANDSHAKE_DAT
 
 
 
-
+#if 0
 
 
 typedef struct HANDSHAKE_DATA {
@@ -62,7 +64,7 @@ void logErrorAndExit(const char *msg)
 }
 
 int32_t startNetwork(const char *droneIpAdd, uint16_t port, int *droneCommandfd) {
-	struct sockaddr_in serv_addr		= {0};
+	struct sockaddr_in serv_addr;//		= {0};
     struct hostent *server				= NULL;
 	HANDSHAKE_DATA	*handshakeData = NULL;
 
@@ -122,3 +124,5 @@ int32_t startHandshake(int sockfd, const char *command, char *responseBuf, ssize
     printf("%s:%s:%d Response received = %s\n", __FILE__, __func__, __LINE__, responseBuf);
     return 0;
 }
+#endif
+

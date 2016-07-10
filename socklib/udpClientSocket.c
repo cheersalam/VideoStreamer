@@ -1,4 +1,5 @@
-#include "udpCLientSocket.h"
+#include "udpClientSocket.h"
+#include <assert.h>
 #include <pthread.h>
 
 #define MAX_RECV_BUF_LEN (1024 * 1024)
@@ -41,9 +42,9 @@ void *initUdpClientSocket(uint16_t port, char *hostname) {
 		return NULL;
 	}
 
-	memset(udpSocketData->serveraddr, 0, sizeof(udpSocketData->serveraddr));
-	udpSocketData->serveraddr->sin_family = AF_INET;
-	udpSocketData->serveraddr->sin_port = htons(port);
+	memset(&udpSocketData->serveraddr, 0, sizeof(udpSocketData->serveraddr));
+	udpSocketData->serveraddr.sin_family = AF_INET;
+	udpSocketData->serveraddr.sin_port = htons(port);
 	memcpy((char *)server->h_addr, (char *)&udpSocketData->serveraddr.sin_addr.s_addr, server->h_length);
 
 	err = pthread_create(&udpSocketData->threadId, NULL, clientThread, (void *)udpSocketData);
@@ -58,17 +59,17 @@ void *initUdpClientSocket(uint16_t port, char *hostname) {
 void *clientThread(void *args) {
 	UDP_SOCKET_T *udpSocketData = args;
 	int32_t nBytes = 0;
-	int32_t addrSize = 0;
+	uint32_t addrSize = 0;
 	unsigned char buffer[MAX_RECV_BUF_LEN];
 
 	addrSize = sizeof(udpSocketData->serveraddr);
 	udpSocketData->isRunning = 1;
 	while (udpSocketData->isRunning) {
-		nBytes = recvfrom(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, 0, &udpSocketData->serveraddr, &addrSize);
+		nBytes = recvfrom(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, 0, (struct sockaddr *)&udpSocketData->serveraddr, &addrSize);
 		if (nBytes < 0) {
 			printf("ERROR in recvfrom\n");
 		}
-		printf("Bytes Received = %s\n", nBytes);
+		printf("Bytes Received = %d\n", nBytes);
 	}
 	pthread_exit(NULL);
 }
@@ -83,7 +84,7 @@ int32_t sendClientUdpData(void *handle, char *buffer, int32_t bufLen) {
 	}
 
 	addrSize = sizeof(udpSocketData->serveraddr);
-	nBytes = sendto(udpSocketData->fd, buffer, bufLen, 0, &udpSocketData->serveraddr, addrSize);
+	nBytes = sendto(udpSocketData->fd, buffer, bufLen, 0, (struct sockaddr *)&udpSocketData->serveraddr, addrSize);
 	if (nBytes < 0) {
 		printf("ERROR in sendto\n");
 	}

@@ -1,4 +1,14 @@
-#include "udpCLientSocket.h"
+#include "tcpClientSocket.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h> 
+#include <assert.h>
 #include <pthread.h>
 
 #define MAX_RECV_BUF_LEN (1024 * 1024)
@@ -18,6 +28,7 @@ void *initTcpClientSocket(uint16_t port, char *hostname) {
 	TCP_SOCKET_T *tcpSocketData = NULL;
 	struct hostent *server;
 
+    printf("%s:%s:%d\n", __FILE__, __func__, __LINE__ );
 	assert(hostname);
 	tcpSocketData = (TCP_SOCKET_T*)malloc(sizeof(TCP_SOCKET_T));
 	if (NULL == tcpSocketData) {
@@ -41,13 +52,13 @@ void *initTcpClientSocket(uint16_t port, char *hostname) {
 		return NULL;
 	}
 
-	memset(tcpSocketData->serveraddr, 0, sizeof(tcpSocketData->serveraddr));
-	tcpSocketData->serveraddr->sin_family = AF_INET;
-	tcpSocketData->serveraddr->sin_port = htons(port);
-	memcpy((char *)server->h_addr, (char *)&tcpSocketData->serveraddr.sin_addr.s_addr, server->h_length);
+	memset(&tcpSocketData->serveraddr, 0, sizeof(tcpSocketData->serveraddr));
+	tcpSocketData->serveraddr.sin_family = AF_INET;
+	tcpSocketData->serveraddr.sin_port = htons(port);
+	memcpy((char *)&tcpSocketData->serveraddr.sin_addr.s_addr, (char *)server->h_addr, server->h_length);
 
 	if (connect(tcpSocketData->fd, &tcpSocketData->serveraddr, sizeof(tcpSocketData->serveraddr)) < 0) {
-		printf("ERROR connecting");
+		printf("Connect failed for %s\n", hostname);
 		free(tcpSocketData);
 		return NULL;
 	}
@@ -57,6 +68,7 @@ void *initTcpClientSocket(uint16_t port, char *hostname) {
 		printf("ERROR thread creation failed\n");
 		close(tcpSocketData->fd);
 		free(tcpSocketData);
+        return NULL;
 	}
 	return tcpSocketData;
 }
@@ -67,14 +79,15 @@ void *clientThread(void *args) {
 	int32_t addrSize = 0;
 	unsigned char buffer[MAX_RECV_BUF_LEN];
 
+    printf("%s:%s:%d TCP clientThread started\n", __FILE__, __func__, __LINE__ );
 	addrSize = sizeof(udpSocketData->serveraddr);
 	udpSocketData->isRunning = 1;
 	while (udpSocketData->isRunning) {
-		nBytes = read(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN);
+		nBytes = recv(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, MSG_WAITALL);
 		if (nBytes < 0) {
 			printf("ERROR in read\n");
 		}
-		printf("Bytes Received = %s\n", nBytes);
+		printf("Bytes Received = %s\n", buffer);
 	}
 	pthread_exit(NULL);
 }
