@@ -76,11 +76,9 @@ void *initTcpClientSocket(uint16_t port, char *hostname) {
 void *clientThread(void *args) {
 	TCP_SOCKET_T *udpSocketData = args;
 	int32_t nBytes = 0;
-	int32_t addrSize = 0;
 	unsigned char buffer[MAX_RECV_BUF_LEN];
 
     printf("%s:%s:%d TCP clientThread started\n", __FILE__, __func__, __LINE__ );
-	addrSize = sizeof(udpSocketData->serveraddr);
 	udpSocketData->isRunning = 1;
 	while (udpSocketData->isRunning) {
 		nBytes = recv(udpSocketData->fd, buffer, MAX_RECV_BUF_LEN, 0);
@@ -93,7 +91,6 @@ void *clientThread(void *args) {
 }
 
 int32_t sendDataToTcpServer(void *handle, char *buffer, int32_t bufLen) {
-	int32_t addrSize = 0;
 	int32_t nBytes;
 	TCP_SOCKET_T *udpSocketData = handle;
 
@@ -101,7 +98,6 @@ int32_t sendDataToTcpServer(void *handle, char *buffer, int32_t bufLen) {
 		return -1;
 	}
 
-	addrSize = sizeof(udpSocketData->serveraddr);
 	nBytes = write(udpSocketData->fd, buffer, bufLen);
 	if (nBytes < 0) {
 		printf("ERROR in sendto\n");
@@ -111,13 +107,11 @@ int32_t sendDataToTcpServer(void *handle, char *buffer, int32_t bufLen) {
 }
 
 int32_t sendSyncDataToTcpServer(void *handle, char *inBuf, int32_t inBufLen, char *outBuf, int32_t *outBufLen ) {
-	int32_t addrSize = 0;
 	int32_t nBytes;
 	TCP_SOCKET_T *udpSocketData = handle;
 
     assert(inBuf && outBuf);
 
-	addrSize = sizeof(udpSocketData->serveraddr);
 	nBytes = write(udpSocketData->fd, inBuf, inBufLen);
 	if (nBytes < 0) {
 		printf("ERROR in sendto\n");

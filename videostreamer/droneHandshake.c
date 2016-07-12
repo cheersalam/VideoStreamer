@@ -13,9 +13,26 @@ char *convertToJson(HANDSHAKE_REQ_T *handshakeRequest) {
 	return ptr;
 }
 
+int32_t parseJsonToHandshakeData(char *jsonStr, HANDSHAKE_DATA_T *handshakeData) {
+    cJSON *root = cJSON_Parse(jsonStr);
+    if (NULL == root) {
+        return -1;
+    }
+   
+    handshakeData->status = cJSON_GetObjectItem(root, "status")->valueint;
+    handshakeData->c2d_port = cJSON_GetObjectItem(root, "c2d_port")->valueint;
+    handshakeData->arstream_fragment_size = cJSON_GetObjectItem(root, "arstream_fragment_size")->valueint;
+    handshakeData->arstream_fragment_maximum_number = cJSON_GetObjectItem(root, "arstream_fragment_maximum_number")->valueint;
+    handshakeData->arstream_max_ack_interval = cJSON_GetObjectItem(root, "arstream_max_ack_interval")->valueint;
+    handshakeData->c2d_update_port = cJSON_GetObjectItem(root, "c2d_update_port")->valueint;
+    handshakeData->c2d_user_port = cJSON_GetObjectItem(root, "c2d_user_port")->valueint;
+    cJSON_Delete(root);
+    return 0;
+}
+
 void * handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *handshakeData) {
 	void *handshakeHandler = NULL;
-	char *jsonObject = NULL;
+	char *jsonStr = NULL;
 	int32_t bytesSent = 0;
     char handshakeResponse[1024 * 1024] = {0};
     int32_t handshakeResLen = 0;
@@ -32,20 +49,23 @@ void * handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *h
 	strncpy(handshakeRequest.controller_type, CONTROLLER_TYPE, 64);
 	handshakeRequest.d2c_port = D2C_PORT;
 
-	jsonObject = convertToJson(&handshakeRequest);
-	if (NULL == jsonObject) {
+	jsonStr = convertToJson(&handshakeRequest);
+	if (NULL == jsonStr) {
 		printf("Json parsing failed \n");
 		closeTcpClient(handshakeHandler);
 		return NULL;
 	}
 
-	bytesSent = sendSyncDataToTcpServer(handshakeHandler, jsonObject, strlen(jsonObject), handshakeResponse, &handshakeResLen);
+	bytesSent = sendSyncDataToTcpServer(handshakeHandler, jsonStr, strlen(jsonStr), handshakeResponse, &handshakeResLen);
 	if (0 == bytesSent) {
-		free(jsonObject);
+		free(jsonStr);
 		closeTcpClient(handshakeHandler);
 		return NULL;
 	}
     printf("handshake data %s\n", handshakeResponse);
+    
+    parseJsonToHandshakeData(handshakeResponse, handshakeData);
+    free(jsonStr);
 	return handshakeHandler;
 }
 
