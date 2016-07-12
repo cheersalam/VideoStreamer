@@ -7,8 +7,25 @@
 #include <arpa/inet.h>
 #include "assert.h"
 #include "streamReceiver.h"
+#include "udpServerSocket.h"
 
 
+
+void *startStreamReceiver(char *droneIp, uint16_t dronePort) {
+	RECEIVER_CB callback = &streamData;
+	printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
+	void *handle = initUdpServerSocket(dronePort, droneIp, callback);
+	if (NULL == handle) {
+		return NULL;
+	}
+	return handle;
+}
+
+void streamData(char *buffer, int32_t bufLen) {
+
+}
+
+#if 0
 void *startReceiverThread(void *data);
     
 void *startReceiver(RECEIVER_CONFIG_T *config) {
@@ -93,3 +110,4 @@ int32_t isRunning(void *handle) {
     return data->running;
 }
 
+#endif

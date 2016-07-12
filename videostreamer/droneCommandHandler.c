@@ -5,8 +5,19 @@
 #include <malloc.h>
 #include <assert.h>
 #include "droneCommandHandler.h"
+#include "udpClientSocket.h"
 
 
+void *startDroneCommandHandler(char *droneIp, uint16_t dronePort) {
+	printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
+	void *handle = initUdpClientSocket(dronePort, droneIp);
+	if (NULL == handle) {
+		return NULL;
+	}
+	return handle;
+}
+
+#if 0
 void *startDroneCommandHandlerThread(void *data);
     
 void *startDroneCommandHandler(uint16_t port) {
@@ -93,4 +104,6 @@ int32_t sendCommand(void *handle, char *buffer, int32_t nBytes) {
 	sendto(data->fd ,buffer, nBytes, 0, (struct sockaddr *)&data->serverAddr, sizeof(data->serverAddr));
 }
 
+
+#endif
 

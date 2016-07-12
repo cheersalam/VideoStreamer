@@ -11,11 +11,12 @@ typedef struct UDP_SOCKET_T {
 	struct sockaddr_in serveraddr;
 	pthread_t   threadId;
 	int32_t isRunning;
+	RECEIVER_CB callback;
 }UDP_SOCKET_T;
 
 void *serverThread(void *data);
 
-void *initUdpServerSocket(uint16_t port, char *hostname) {
+void *initUdpServerSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
 	int32_t err = 0;
 	int32_t optval;
 	UDP_SOCKET_T *udpSocketData = NULL;
@@ -28,6 +29,7 @@ void *initUdpServerSocket(uint16_t port, char *hostname) {
 	}
 	memset((void *)udpSocketData, 0, sizeof(UDP_SOCKET_T));
 	udpSocketData->port = port;
+	udpSocketData->callback = callback;
 
 	udpSocketData->fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (udpSocketData->fd < 0) {
