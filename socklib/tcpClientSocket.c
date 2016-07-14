@@ -21,7 +21,7 @@ typedef struct TCP_SOCKET_T {
 	int32_t isRunning;
 }TCP_SOCKET_T;
 
-void *clientThread(void *data);
+static void *clientThread(void *data);
 
 void *initTcpClientSocket(uint16_t port, char *hostname) {
 	int32_t err = 0;

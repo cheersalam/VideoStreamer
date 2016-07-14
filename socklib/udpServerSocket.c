@@ -21,6 +21,7 @@ void *initUdpServerSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
 	int32_t optval;
 	UDP_SOCKET_T *udpSocketData = NULL;
 
+	printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
 	assert(hostname);
 	udpSocketData = (UDP_SOCKET_T*)malloc(sizeof(UDP_SOCKET_T));
 	if (NULL == udpSocketData) {
@@ -70,6 +71,7 @@ void *serverThread(void *args) {
 	struct hostent *hostp;
 	char *hostaddrp;
 
+	printf("%s:%s:%d Waiting for incoming messages\n", __FILE__, __func__, __LINE__);
 	addrSize = sizeof(clientaddr);
 	udpSocketData->isRunning = 1;
 	while (udpSocketData->isRunning) {

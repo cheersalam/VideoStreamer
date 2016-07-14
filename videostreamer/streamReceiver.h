@@ -1,5 +1,7 @@
-#include "pthread.h"
+#ifndef STREAM_RECEIVER_H
+#define STREAM_RECEIVER_H
 
+#include "pthread.h"
 
 typedef struct RECEIVER_CONFIG_T {
     uint16_t    port;
@@ -14,3 +16,6 @@ typedef struct RECEIVER_DATA_T {
 
 void *startReceiver(RECEIVER_CONFIG_T *config);
 int32_t isRunning(void *handle);
+void *startStreamReceiver(char *droneIp, uint16_t dronePort);
+
+#endif STREAM_RECEIVER_H

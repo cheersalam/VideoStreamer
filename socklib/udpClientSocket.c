@@ -12,7 +12,7 @@ typedef struct UDP_SOCKET_T {
 	int32_t isRunning;
 }UDP_SOCKET_T;
 
-void *clientThread(void *data);
+static void *clientThread(void *data);
 
 void *initUdpClientSocket(uint16_t port, char *hostname) {
 	int32_t err = 0;
@@ -56,7 +56,7 @@ void *initUdpClientSocket(uint16_t port, char *hostname) {
 	return udpSocketData;
 }
 
-void *clientThread(void *args) {
+static void *clientThread(void *args) {
 	UDP_SOCKET_T *udpSocketData = args;
 	int32_t nBytes = 0;
 	uint32_t addrSize = 0;

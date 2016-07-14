@@ -3,7 +3,7 @@
 # cmake file
 
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.2)
 set(PROJECT_NAME "BebopVideoStreamer")
 project (${PROJECT_NAME})
 
@@ -84,10 +84,24 @@ ExternalProject_Add(
                     UPDATE_COMMAND git pull
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/cJSON
                     BUILD_IN_SOURCE 1
+                    BUILD_ALWAYS 0
                     CONFIGURE_COMMAND ""
                     BUILD_COMMAND make
                     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ./cJSON.h "${PROJECT_BINARY_DIR}/include"
                     && ${CMAKE_COMMAND} -E copy ./libcjson.a "${PROJECT_BINARY_DIR}/lib")
+
+ExternalProject_Add(
+                    ffmpeg
+                    GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
+                    GIT_TAG master
+                    UPDATE_COMMAND git pull
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/ffmpeg
+                    BUILD_IN_SOURCE 1
+                    BUILD_ALWAYS 0
+                    CONFIGURE_COMMAND ./configure  --enable-pthreads --enable-static --enable-shared --prefix=${PROJECT_BINARY_DIR}
+                    BUILD_COMMAND make
+                    INSTALL_COMMAND make install)
+
 
 
 

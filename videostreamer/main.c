@@ -24,6 +24,7 @@ int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData);
 int32_t main() {
 	int32_t err = 0;
     void *handshakeHandle = NULL;
+    void *streamReceiverHandle = NULL;
 	HANDSHAKE_DATA_T handshakeData = {0};
 	char *droneIp = "127.0.0.1";//"192.168.42.1";
 	uint32_t dronePort = 5000;//44444;
@@ -35,6 +36,16 @@ int32_t main() {
         printf("Handshake failed. Exit\n");
         return 0;
     }
+
+    streamReceiverHandle = startStreamReceiver(droneIp, handshakeData.c2d_port);
+    if (NULL == streamReceiverHandle) 
+    {
+        printf("Start Receiver failed. Exit\n");
+        return 0;
+    }
+
+
+
     while(1)
         sleep(1);
 }

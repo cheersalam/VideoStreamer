@@ -9,7 +9,7 @@
 #include "streamReceiver.h"
 #include "udpServerSocket.h"
 
-
+static void streamData(char *buffer, int32_t bufLen);
 
 void *startStreamReceiver(char *droneIp, uint16_t dronePort) {
 	RECEIVER_CB callback = &streamData;
@@ -21,7 +21,7 @@ void *startStreamReceiver(char *droneIp, uint16_t dronePort) {
 	return handle;
 }
 
-void streamData(char *buffer, int32_t bufLen) {
+static void streamData(char *buffer, int32_t bufLen) {
 
 }
 
