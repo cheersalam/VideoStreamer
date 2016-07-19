@@ -1,3 +1,6 @@
+#ifndef DRONE_COMMAND_HANDLER_H
+#define DRONE_COMMAND_HANDLER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,3 +21,5 @@ typedef struct COMMAND_DATA_T {
 
 void *startDroneCommandHandler(char *droneIp, uint16_t dronePort);
 int32_t startVideoStreaming(void *handle);
+
+#endif //DRONE_COMMAND_HANDLER_H

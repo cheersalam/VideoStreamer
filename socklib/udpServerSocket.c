@@ -5,30 +5,31 @@
 
 #define MAX_RECV_BUF_LEN (1024 * 1024)
 
-typedef struct UDP_SOCKET_T {
+typedef struct UDP_SERVER_SOCKET_T {
 	uint16_t port;
 	int32_t fd;
 	struct sockaddr_in serveraddr;
 	pthread_t   threadId;
 	int32_t isRunning;
 	RECEIVER_CB callback;
-}UDP_SOCKET_T;
+}UDP_SERVER_SOCKET_T;
 
 void *serverThread(void *data);
 
 void *initUdpServerSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
-	int32_t err = 0;
-	int32_t optval;
-	UDP_SOCKET_T *udpSocketData = NULL;
+	int32_t err					= 0;
+	int32_t optval				= 0;
+	UDP_SERVER_SOCKET_T *udpSocketData = NULL;
 
 	printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
 	assert(hostname);
-	udpSocketData = (UDP_SOCKET_T*)malloc(sizeof(UDP_SOCKET_T));
+
+	udpSocketData = (UDP_SERVER_SOCKET_T*)malloc(sizeof(UDP_SERVER_SOCKET_T));
 	if (NULL == udpSocketData) {
 		printf("ERROR malloc error\n");
 		return NULL;
 	}
-	memset((void *)udpSocketData, 0, sizeof(UDP_SOCKET_T));
+	memset((void *)udpSocketData, 0, sizeof(UDP_SERVER_SOCKET_T));
 	udpSocketData->port = port;
 	udpSocketData->callback = callback;
 
@@ -63,13 +64,14 @@ void *initUdpServerSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
 }
 
 void *serverThread(void *args) {
-	UDP_SOCKET_T *udpSocketData = args;
-	int32_t nBytes = 0;
-	uint32_t addrSize = 0;
-	unsigned char buffer[MAX_RECV_BUF_LEN];
+	UDP_SERVER_SOCKET_T *udpSocketData				= args;
+	int32_t nBytes							= 0;
+	uint32_t addrSize						= 0;
+	unsigned char buffer[MAX_RECV_BUF_LEN]	= {0};
+	struct hostent *hostp					= NULL;
+	char *hostaddrp							= NULL;
 	struct sockaddr_in clientaddr; /* client addr */
-	struct hostent *hostp;
-	char *hostaddrp;
+	
 
 	printf("%s:%s:%d Waiting for incoming messages\n", __FILE__, __func__, __LINE__);
 	addrSize = sizeof(clientaddr);
@@ -88,17 +90,18 @@ void *serverThread(void *args) {
 		hostaddrp = inet_ntoa(clientaddr.sin_addr);
 		if (hostaddrp == NULL) {
 			printf("ERROR on inet_ntoa\n");
-		}	
+		}
+		udpSocketData->callback(buffer, nBytes);
 		printf("server received datagram from (%s) len = %d\n", hostaddrp, nBytes);
 	}
 	pthread_exit(NULL);
 }
 
 int32_t sendUdpDataToClient(void *handle, void *client, char *buffer, int32_t bufLen) {
-	int32_t addrSize = 0;
-	int32_t nBytes = 0;
-	UDP_SOCKET_T *udpSocketData = handle;
-	struct sockaddr_in *clientaddr = client;
+	int32_t addrSize				= 0;
+	int32_t nBytes					= 0;
+	UDP_SERVER_SOCKET_T *udpSocketData		= handle;
+	struct sockaddr_in *clientaddr	= client;
 
 	if (NULL == buffer) {
 		return 0;
@@ -116,7 +119,7 @@ int32_t isUdpServerRunning(void *handle) {
 	if (NULL == handle) {
 		return 0;
 	}
-	UDP_SOCKET_T *udpSocketData = handle;
+	UDP_SERVER_SOCKET_T *udpSocketData = handle;
 	return udpSocketData->isRunning;
 }
 
@@ -124,7 +127,7 @@ int32_t closeUdpServer(void *handle) {
 	if (NULL == handle) {
 		return 0;
 	}
-	UDP_SOCKET_T *udpSocketData = handle;
+	UDP_SERVER_SOCKET_T *udpSocketData = handle;
 	if (udpSocketData->isRunning) {
 		udpSocketData->isRunning = 0;
 		pthread_join(udpSocketData->threadId, NULL);

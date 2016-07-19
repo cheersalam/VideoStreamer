@@ -4,29 +4,31 @@
 
 #define MAX_RECV_BUF_LEN (1024 * 1024)
 
-typedef struct UDP_SOCKET_T {
+typedef struct UDP_CLIENT_SOCKET_T {
 	uint16_t port;
 	int32_t fd;
 	struct sockaddr_in serveraddr;
 	pthread_t   threadId;
 	int32_t isRunning;
-}UDP_SOCKET_T;
+	RECEIVER_CB callback;
+}UDP_CLIENT_SOCKET_T;
 
 static void *clientThread(void *data);
 
-void *initUdpClientSocket(uint16_t port, char *hostname) {
+void *initUdpClientSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
 	int32_t err = 0;
-	UDP_SOCKET_T *udpSocketData = NULL;
+	UDP_CLIENT_SOCKET_T *udpSocketData = NULL;
 	struct hostent *server;
 
 	assert(hostname);
-	udpSocketData = (UDP_SOCKET_T*)malloc(sizeof(UDP_SOCKET_T));
+	udpSocketData = (UDP_CLIENT_SOCKET_T*)malloc(sizeof(UDP_CLIENT_SOCKET_T));
 	if (NULL == udpSocketData) {
 		printf("ERROR malloc error\n");
 		return NULL;
 	}
-	memset(udpSocketData, 0, sizeof(UDP_SOCKET_T));
+	memset(udpSocketData, 0, sizeof(UDP_CLIENT_SOCKET_T));
 	udpSocketData->port = port;
+	udpSocketData->callback = callback;
 
 	udpSocketData->fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (udpSocketData->fd < 0) {
@@ -57,7 +59,7 @@ void *initUdpClientSocket(uint16_t port, char *hostname) {
 }
 
 static void *clientThread(void *args) {
-	UDP_SOCKET_T *udpSocketData = args;
+	UDP_CLIENT_SOCKET_T *udpSocketData = args;
 	int32_t nBytes = 0;
 	uint32_t addrSize = 0;
 	unsigned char buffer[MAX_RECV_BUF_LEN];
@@ -69,6 +71,7 @@ static void *clientThread(void *args) {
 		if (nBytes < 0) {
 			printf("ERROR in recvfrom\n");
 		}
+		udpSocketData->callback(buffer, nBytes);
 		printf("Bytes Received = %d\n", nBytes);
 	}
 	pthread_exit(NULL);
@@ -77,7 +80,7 @@ static void *clientThread(void *args) {
 int32_t sendClientUdpData(void *handle, char *buffer, int32_t bufLen) {
 	int32_t addrSize = 0;
 	int32_t nBytes;
-	UDP_SOCKET_T *udpSocketData = handle;
+	UDP_CLIENT_SOCKET_T *udpSocketData = handle;
 
 	if (NULL == buffer) {
 		return 0;
@@ -95,7 +98,7 @@ int32_t isUdpClientRunning(void *handle) {
 	if (NULL == handle) {
 		return 0;
 	}
-	UDP_SOCKET_T *udpSocketData = handle;
+	UDP_CLIENT_SOCKET_T *udpSocketData = handle;
 	return udpSocketData->isRunning;
 }
 
@@ -103,7 +106,7 @@ int32_t closeUdpClient(void *handle) {
 	if (NULL == handle) {
 		return 0;
 	}
-	UDP_SOCKET_T *udpSocketData = handle;
+	UDP_CLIENT_SOCKET_T *udpSocketData = handle;
 	if (udpSocketData->isRunning) {
 		udpSocketData->isRunning = 0;
 		pthread_join(udpSocketData->threadId, NULL);
