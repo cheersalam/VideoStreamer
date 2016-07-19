@@ -17,6 +17,11 @@ void *startDroneCommandHandler(char *droneIp, uint16_t dronePort) {
 	return handle;
 }
 
+int32_t startVideoStreaming(void *handle) {
+    char buffer[] = {0x04, 0x0b, 0x01, 0x0c, 0x00, 0x00, 0x00, 0x01, 0x15, 0x00, 0x00, 0x01};
+    return sendClientUdpData(handle, buffer, 0x0c);
+}
+
 #if 0
 void *startDroneCommandHandlerThread(void *data);
     

@@ -89,7 +89,7 @@ void *serverThread(void *args) {
 		if (hostaddrp == NULL) {
 			printf("ERROR on inet_ntoa\n");
 		}	
-		printf("server received datagram from %s (%s)\n", hostp->h_name, hostaddrp);
+		printf("server received datagram from (%s) len = %d\n", hostaddrp, nBytes);
 	}
 	pthread_exit(NULL);
 }
