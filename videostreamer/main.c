@@ -27,24 +27,26 @@ int32_t main() {
         return 0;
     }
 
-    streamReceiverHandle = startStreamReceiver(droneIp, D2C_PORT);
-    if (NULL == streamReceiverHandle) 
-    {
-        printf("Start Receiver failed. Exit\n");
-        return 0;
-    }
-
     commandHandle = startDroneCommandHandler(droneIp, handshakeData.c2d_port);
     if (NULL == commandHandle) 
     {
         printf("CommandHandler failed. Exit\n");
         return 0;
     }
-    
+
+    streamReceiverHandle = startStreamReceiver(droneIp, D2C_PORT);
+    if (NULL == streamReceiverHandle) 
+    {
+        printf("Start Receiver failed. Exit\n");
+        return 0;
+    }
+   
+    sleep(1);
     err = startVideoStreaming(commandHandle);
     if (err < 0) {
         printf("Command send failed. Exit\n");
     }
+
 
     while(1)
         sleep(1);

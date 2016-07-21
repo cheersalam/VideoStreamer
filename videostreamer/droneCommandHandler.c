@@ -7,6 +7,7 @@
 #include "droneCommandHandler.h"
 #include "udpClientSocket.h"
 
+static void commandResponse(char *buffer, int32_t bufLen);
 
 void *startDroneCommandHandler(char *droneIp, uint16_t dronePort) {
 	RECEIVER_CB callback = &commandResponse;
@@ -19,7 +20,10 @@ void *startDroneCommandHandler(char *droneIp, uint16_t dronePort) {
 }
 
 static void commandResponse(char *buffer, int32_t bufLen) {
-	printf("stream data received len = %d\n", bufLen);
+    printf("stream data received len = %d\n", bufLen);
+    if (NULL == buffer) {
+        return;
+    }
 }
 
 int32_t startVideoStreaming(void *handle) {

@@ -20,6 +20,7 @@ void *initUdpClientSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
 	UDP_CLIENT_SOCKET_T *udpSocketData = NULL;
 	struct hostent *server;
 
+	printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
 	assert(hostname);
 	udpSocketData = (UDP_CLIENT_SOCKET_T*)malloc(sizeof(UDP_CLIENT_SOCKET_T));
 	if (NULL == udpSocketData) {
@@ -47,13 +48,14 @@ void *initUdpClientSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
 	memset(&udpSocketData->serveraddr, 0, sizeof(udpSocketData->serveraddr));
 	udpSocketData->serveraddr.sin_family = AF_INET;
 	udpSocketData->serveraddr.sin_port = htons(port);
-	memcpy((char *)server->h_addr, (char *)&udpSocketData->serveraddr.sin_addr.s_addr, server->h_length);
+	memcpy((char *)&udpSocketData->serveraddr.sin_addr.s_addr, (char *)server->h_addr, server->h_length);
 
 	err = pthread_create(&udpSocketData->threadId, NULL, clientThread, (void *)udpSocketData);
 	if (err) {
 		printf("ERROR thread creation failed\n");
 		close(udpSocketData->fd);
 		free(udpSocketData);
+        return NULL;
 	}
 	return udpSocketData;
 }
@@ -64,6 +66,7 @@ static void *clientThread(void *args) {
 	uint32_t addrSize = 0;
 	unsigned char buffer[MAX_RECV_BUF_LEN];
 
+	printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
 	addrSize = sizeof(udpSocketData->serveraddr);
 	udpSocketData->isRunning = 1;
 	while (udpSocketData->isRunning) {
@@ -74,6 +77,7 @@ static void *clientThread(void *args) {
 		udpSocketData->callback(buffer, nBytes);
 		printf("Bytes Received = %d\n", nBytes);
 	}
+	printf("Exiting thread UDP Client\n ");
 	pthread_exit(NULL);
 }
 
@@ -82,6 +86,7 @@ int32_t sendClientUdpData(void *handle, char *buffer, int32_t bufLen) {
 	int32_t nBytes;
 	UDP_CLIENT_SOCKET_T *udpSocketData = handle;
 
+	printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
 	if (NULL == buffer) {
 		return 0;
 	}
@@ -90,7 +95,9 @@ int32_t sendClientUdpData(void *handle, char *buffer, int32_t bufLen) {
 	nBytes = sendto(udpSocketData->fd, buffer, bufLen, 0, (struct sockaddr *)&udpSocketData->serveraddr, addrSize);
 	if (nBytes < 0) {
 		printf("ERROR in sendto\n");
+        return 0;
 	}
+    printf("Command sent \n");
 	return nBytes;
 }
 

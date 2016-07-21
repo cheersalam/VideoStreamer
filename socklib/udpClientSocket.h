@@ -16,6 +16,6 @@ typedef void(*RECEIVER_CB)(char *buffer, int32_t bufLen);
 int32_t closeUdpClient(void *handle);
 int32_t isUdpClientRunning(void *handle);
 int32_t sendClientUdpData(void *handle, char *buffer, int32_t bufLen);
-void *initUdpClientSocket(uint16_t port, char *hostname);
+void *initUdpClientSocket(uint16_t port, char *hostname, RECEIVER_CB callback);
 
 #endif //UDP_CLIENT_SOCKET_H
