@@ -75,7 +75,7 @@ static void *clientThread(void *args) {
 			printf("ERROR in recvfrom\n");
 		}
 		udpSocketData->callback(buffer, nBytes);
-		printf("Bytes Received = %d\n", nBytes);
+		printf("UDP Client socket Bytes Received = %d\n", nBytes);
 	}
 	printf("Exiting thread UDP Client\n ");
 	pthread_exit(NULL);

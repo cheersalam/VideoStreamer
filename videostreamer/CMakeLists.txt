@@ -8,7 +8,7 @@ MESSAGE("COMP_NAME " ${COMP_NAME})
 
 #Add project version number
 
-FILE(GLOB ALL_C_FILES *.c)
+FILE(GLOB ALL_C_FILES *.c ./utilities/*.c)
 
 #Include Folder
 include_directories ("${CMAKE_BINARY_DIR}/include")

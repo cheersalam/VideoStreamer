@@ -6,8 +6,8 @@
 #include <assert.h>
 #include "droneCommandHandler.h"
 #include "udpClientSocket.h"
-#include "parrot.h"
-#include "utilities.h"
+#include "utilities/parrot.h"
+#include "utilities/utilities.h"
 
 static void commandResponse(char *buffer, int32_t bufLen);
 
@@ -25,7 +25,7 @@ static void commandResponse(char *buffer, int32_t bufLen) {
 	int32_t err = 0;
 	int32_t pos = 0;
 	PARROT_DATA_TYPES dataType = 0;
-    printf("stream data received len = %d\n", bufLen);
+    printf("Command Response len = %d\n", bufLen);
     if (NULL == buffer) {
         return;
     }

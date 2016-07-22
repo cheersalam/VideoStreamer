@@ -8,6 +8,8 @@
 #include "assert.h"
 #include "streamReceiver.h"
 #include "udpServerSocket.h"
+#include "utilities/parrot.h"
+#include "utilities/utilities.h"
 
 static void streamData(char *buffer, int32_t bufLen);
 
@@ -22,7 +24,35 @@ void *startStreamReceiver(char *droneIp, uint16_t dronePort) {
 }
 
 static void streamData(char *buffer, int32_t bufLen) {
+	int32_t err = 0;
+	int32_t pos = 0;
+	PARROT_DATA_TYPES dataType = 0;
 	printf("stream data received len = %d\n", bufLen);
+    if (NULL == buffer) {
+        return;
+    }
+	if ( readXBytestoint32(buffer, bufLen, 1, &pos, &dataType) == 0 ) {
+		switch (dataType){
+		case P_DATA_TYPE_ACK:
+			printf("P_DATA_TYPE_ACK \n");
+			break;
+
+		case P_DATA_TYPE_DATA:
+			printf("P_DATA_TYPE_DATA \n");
+			break;
+
+		case P_DATA_TYPE_LOW_LATENCT_DATA:
+			printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
+			break;
+
+		case P_DATA_TYPE_DATA_WITH_ACK:
+			printf("P_DATA_TYPE_DATA_WITH_ACK \n");
+			break;
+
+		default:
+			printf("datatype %d not handles \n", dataType);
+		}
+	}
 
 }
 

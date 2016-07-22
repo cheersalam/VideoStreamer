@@ -94,7 +94,7 @@ ExternalProject_Add(
                     ffmpeg
                     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
                     GIT_TAG master
-                    UPDATE_COMMAND git pull
+                    UPDATE_COMMAND ""
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/ffmpeg
                     BUILD_IN_SOURCE 1
                     BUILD_ALWAYS 0

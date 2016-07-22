@@ -1,5 +1,7 @@
 #pragma once
+#include "stdio.h"
 #include "stdint.h"
+#include "utilities.h"
 
 // 1byte to uint32
 int32_t read1Bytetoint32(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint32_t *outVal) {
