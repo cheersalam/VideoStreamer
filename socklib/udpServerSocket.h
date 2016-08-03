@@ -10,8 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-
-typedef void (*RECEIVER_CB)(char *buffer, int32_t bufLen);
+#include "socklibCommon.h"
 
 int32_t closeUdpServer(void *handle);
 int32_t isUdpServerRunning(void *handle);
