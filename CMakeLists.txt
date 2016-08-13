@@ -1,12 +1,10 @@
+# Mohammad Alam
+# cheersalam@gmail.com
 # cmake file
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.2)
 set(PROJECT_NAME "BebopVideoStreamer")
 project (${PROJECT_NAME})
-
-
-
-# TODO: The version number
 
 #------------------------------------------------------------------------------
 # Compiler Flags options 
@@ -22,15 +20,17 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(VS_CXX_FLAGS_DEBUG "-g3 -O0")
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
-#Settings MSVC Macros, Add BirdHouse project macros here only
+#------------------------------------------------------------------------------
+#Settings MSVC Macros
+#------------------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     MESSAGE(" Configuring flags for MSVC:")
     set(VS_C_FLAGS "/W4 /WX /EHsc")
-#    set(VS_C_FLAGS_RELEASE "-O2")
-#    set(VS_C_FLAGS_DEBUG "-g3 -O0")
+    set(VS_C_FLAGS_RELEASE "-O2")
+    set(VS_C_FLAGS_DEBUG "-g3 -O0")
     set(VS_CXX_FLAGS "/W4 /WX /EHsc")
-#    set(VS_CXX_FLAGS_RELEASE "-O2")
-#    set(VS_CXX_FLAGS_DEBUG "-g3 -O0")
+    set(VS_CXX_FLAGS_RELEASE "-O2")
+    set(VS_CXX_FLAGS_DEBUG "-g3 -O0")
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
 #only append flags to existing flags
@@ -48,7 +48,6 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
 #set(LIB_INSTALL_DIR lib)
 include_directories(include/)
 link_directories(${PROJECT_BINARY_DIR}/lib/)
-
 
 #------------------------------------------------------------------------------
 # Project Settings: path for lib, bin and include folder
@@ -71,32 +70,53 @@ else()
 endif()
 
 #------------------------------------------------------------------------------
-# External Project - jsmn - json parser library
+# External Project - cJSON - json parser library
 #------------------------------------------------------------------------------
 include(ExternalProject)
 ExternalProject_Add(
-                    jsmn
-                    GIT_REPOSITORY https://github.com/zserge/jsmn.git
+                    cJSON
+                    GIT_REPOSITORY https://github.com/DaveGamble/cJSON
                     GIT_TAG master
                     UPDATE_COMMAND git pull
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/jsmn
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/cJSON
                     BUILD_IN_SOURCE 1
+                    BUILD_ALWAYS 0
                     CONFIGURE_COMMAND ""
                     BUILD_COMMAND make
-                    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ./jsmn.h "${PROJECT_BINARY_DIR}/include"
-                    && ${CMAKE_COMMAND} -E copy ./libjsmn.a "${PROJECT_BINARY_DIR}/lib")
+                    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ./cJSON.h "${PROJECT_BINARY_DIR}/include"
+                    && ${CMAKE_COMMAND} -E copy ./libcjson.a "${PROJECT_BINARY_DIR}/lib")
 
-
+ExternalProject_Add(
+                    ffmpeg
+                    GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
+                    GIT_TAG master
+                    UPDATE_COMMAND ""
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/ffmpeg
+                    BUILD_IN_SOURCE 1
+                    BUILD_ALWAYS 0
+                    CONFIGURE_COMMAND ./configure  --enable-pthreads --enable-static --enable-shared --prefix=${PROJECT_BINARY_DIR}
+                    BUILD_COMMAND make
+                    INSTALL_COMMAND make install)
 
 #------------------------------------------------------------------------------
-# Adding jsmn lib
+# Adding cJSON lib
 #------------------------------------------------------------------------------
-set(JSON_PARSER_LIB libjsmn.a)
+set(JSON_PARSER_LIB libcjson.a -lm)
+
+#------------------------------------------------------------------------------
+# Adding FFMPEG lib
+#------------------------------------------------------------------------------
+set(FFMPEG_LIBS avcodec avdevice avfilter avformat avutil swresample swscale)
+
+#------------------------------------------------------------------------------
+# Adding socklib lib
+#------------------------------------------------------------------------------
+set(SOCK_LIB libsocklib.a)
 
 #------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
 #------------------------------------------------------------------------------
-#set(PROJECT_LIBS bv fcgi cJSON pthread m bv_media jpeg ${FFMPEG_LIBS})
+set(PROJECT_LIBS ${JSON_PARSER_LIB} ${FFMPEG_LIBS} ${SOCK_LIB})
 
 #------------------------------------------------------------------------------
 # Adding colors 
@@ -107,7 +127,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 #------------------------------------------------------------------------------
 # Sub Directories 
 #------------------------------------------------------------------------------
-#cJSON Library
+add_subdirectory (socklib) 
 add_subdirectory (videostreamer) 
 
 #------------------------------------------------------------------------------

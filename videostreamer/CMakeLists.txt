@@ -8,7 +8,7 @@ MESSAGE("COMP_NAME " ${COMP_NAME})
 
 #Add project version number
 
-FILE(GLOB ALL_C_FILES *.c)
+FILE(GLOB ALL_C_FILES *.c ./utilities/*.c)
 
 #Include Folder
 include_directories ("${CMAKE_BINARY_DIR}/include")
@@ -30,6 +30,6 @@ set_target_properties(${COMP_NAME} PROPERTIES
 set_target_properties(${COMP_NAME} PROPERTIES 
                       BUILD_WITH_INSTALL_RPATH true
                       ENABLE_EXPORTS ON)
-target_link_libraries (${COMP_NAME} ${JSON_PARSER_LIB} -lpthread)
+target_link_libraries (${COMP_NAME} ${JSON_PARSER_LIB} ${SOCK_LIB} ${FFMPEG_LIBS} -lpthread)
 
 

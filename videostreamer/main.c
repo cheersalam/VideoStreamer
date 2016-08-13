@@ -3,121 +3,111 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include "droneHandshake.h"
 #include "config.h"
-#include "jsmn.h"
 #include "pthread.h"
-#include "streamReceiver.h"
-#include "common.h"
+#include "socklibCommon.h"
+#include "droneHandshake.h"
+#include "droneCommandHandler.h"
+#include "utilities/parrot.h"
+#include "utilities/utilities.h"
 
+static void streamData(unsigned char *buffer, int32_t bufLen);
 
-int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData);
+//only global
+void *droneHandle = NULL;
+void *vcg = NULL;
+static int count = 0;
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
-		return 0;
-	}
-	return -1;
-}
-
-int32_t main(){
-    int droneCommandfd              = 0;;
-	int32_t err                     = 0;
-	char response[1024]             = {0};
-    void *receiverHandle            = NULL;
+int32_t main() {
+    int32_t err                     = 0;
     void *handshakeHandle           = NULL;
-    void *commandHandle           = NULL;
-    RECEIVER_CONFIG_T config        = {0};
     HANDSHAKE_DATA_T handshakeData  = {0};
-	char buffer[] = {0x04, 0x0b, 0x01, 0x0c, 0x00, 0x00, 0x00, 0x01, 0x15, 0x00, 0x00, 0x01};
+    char *droneIp                   = "192.168.42.1";
+    uint32_t dronePort              = 44444;
 
-    err = startNetwork(DRONE_IP_ADD, DRONE_COMM_PORT, &droneCommandfd);
-    if (err) {
-        printf("startNetwork Failed\n");
+    handshakeHandle = handshakeWithdrone(droneIp, dronePort, &handshakeData);
+    if (NULL == handshakeHandle) 
+    {
+        printf("Handshake failed. Exit\n");
         return 0;
     }
 
-	err = startHandshake(droneCommandfd, DRONE_HANDSHAKE_REQ, response, 1024 - 1);
-    if(err) {
-        printf("send command failed. Exiting\n");
-        return 0;
-    }	 
-   
-    parseHandshakeResponse(response, &handshakeData);
-
-    config.port = 43210;
-    receiverHandle = startReceiver(&config);
-    if (NULL == receiverHandle) {
-        printf("Starting receiver failed. Exiting...\n");
+    droneHandle = initDroneComm(droneIp, handshakeData.c2d_port, D2C_PORT, &streamData);
+    if (NULL == droneHandle)
+    {
+        printf("initDroneComm failed. Exit\n");
         return 0;
     }
 
-	commandHandle = startDroneCommandHandler(54321);
-	if(NULL == commandHandle) {
-		return 0;
-	}
+#if 0
+    vcg = initContainer(640, 480, VCG_CONTAINER_MPEGTS, VCG_CODEC_ID_NONE, VCG_CODEC_ID_H264, 60);
+    if(vcg == NULL) {
+        printf("initContainer failed \n");
+        return 1;
+    }
+#endif
+    sleep(1);
+    err = startVideoStreaming(droneHandle);
+    if (err < 0) {
+        printf("Command send failed. Exit\n");
+    }
 
-	sendCommand(commandHandle, buffer, 0x0c);
-    while(1) {
+    while(count < 200)
         sleep(1);
-        printf("Receiver thread status = %d\n", isRunning(receiverHandle));
+    //closeContainer(vcg, "out.ts");
+}
+
+static void streamData(unsigned char *buffer, int32_t bufLen) {
+    int32_t pos = 0;
+    int32_t err = 0;
+    int32_t datatype = 0;
+    uint32_t bufferId = 0;
+    uint32_t seqNum = 0;
+    uint32_t size = 0;
+    uint32_t frameNum = 0;
+    PARROT_DATA_TYPES dataType = 0;
+    static int frameCount = 0;
+    //printf("stream data received len = %d\n", bufLen);
+    if (NULL == buffer) {
+        return;
+    }
+
+    readXBytestoint32(buffer, bufLen, 1, &pos, &dataType);
+    readXBytestoint32(buffer, bufLen, 1, &pos, &bufferId);
+    readXBytestoint32(buffer, bufLen, 1, &pos, &seqNum);
+    readXBytestoint32(buffer, bufLen, 4, &pos, &size);
+
+    if (dataType) {
+        switch (dataType) {
+        case P_DATA_TYPE_ACK:
+            //printf("P_DATA_TYPE_ACK \n");
+            break;
+
+        case P_DATA_TYPE_DATA:
+            //printf("P_DATA_TYPE_DATA \n");
+            break;
+
+        case P_DATA_TYPE_LOW_LATENCT_DATA:
+            //printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
+            readXBytestoint32(buffer, bufLen, 4, &pos, &frameNum);
+            printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
+     //       err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
+            sendAck(droneHandle, buffer, bufLen);
+            frameCount++;
+            count++;
+            break;
+
+        case P_DATA_TYPE_DATA_WITH_ACK:
+            //printf("P_DATA_TYPE_DATA_WITH_ACK \n");
+            if (1) { //condition met
+                sendAck(droneHandle, buffer, bufLen);
+            }
+            break;
+
+        default:
+            printf("datatype %d not handles \n", dataType);
+        }
     }
 }
 
-int32_t parseHandshakeResponse(char *jsonStr, HANDSHAKE_DATA_T *handshakeData) {
-	int32_t     i = 0;
-	int32_t     r = 0;
-    char        value[256];
-	jsmn_parser p;
-	jsmntok_t   t[128]; /* We expect no more than 128 tokens */
-	jsmn_init(&p);
-
-    assert(jsonStr);
-
-	r = jsmn_parse(&p, jsonStr, strlen(jsonStr), t, sizeof(t)/sizeof(t[0]));
-	if (r < 0) {
-		printf("Failed to parse JSON: %d\n", r);
-		return r;
-	}
-
-    /* Loop over all keys of the root object */
-	for (i = 1; i < r; i++) {
-        memset(value, 0, 256);
-        memcpy(value, jsonStr + t[i+1].start, t[i+1].end - t[i+1].start);
-		if (jsoneq(jsonStr, &t[i], "status") == 0) {
-			printf("- Status: %.*s\n", t[i+1].end - t[i+1].start, jsonStr + t[i+1].start);
-            handshakeData->status = (int32_t)strtol(value, NULL, 0);
-			i++;
-		} else if (jsoneq(jsonStr, &t[i], "c2d_port") == 0) {
-			printf("- c2d_port: %.*s\n", t[i+1].end - t[i+1].start, jsonStr + t[i+1].start);
-            handshakeData->c2d_port = (int32_t)strtol(value, NULL, 0);
-			i++;
-		} else if (jsoneq(jsonStr, &t[i], "arstream_fragment_size") == 0) {
-			printf("- arstream_fragment_size: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
-            handshakeData->arstream_fragment_size = (int32_t)strtol(value, NULL, 0);
-			i++;
-        } else if (jsoneq(jsonStr, &t[i], "arstream_fragment_maximum_number") == 0) {
-			printf("- arstream_fragment_size: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
-            handshakeData->arstream_fragment_maximum_number = (int32_t)strtol(value, NULL, 0);
-			i++;
-        } else if (jsoneq(jsonStr, &t[i], "arstream_max_ack_interval") == 0) {
-			printf("- arstream_max_ack_interval: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
-            handshakeData->arstream_max_ack_interval = (int32_t)strtol(value, NULL, 0);
-			i++;
-        } else if (jsoneq(jsonStr, &t[i], "c2d_update_port") == 0) {
-			printf("- c2d_update_port: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
-            handshakeData->c2d_update_port = (int32_t)strtol(value, NULL, 0);
-			i++;
-        } else if (jsoneq(jsonStr, &t[i], "c2d_user_port") == 0) {
-			printf("- c2d_user_port: %.*s\n", t[i+1].end-t[i+1].start, jsonStr + t[i+1].start);
-            handshakeData->c2d_user_port = (int32_t)strtol(value, NULL, 0);
-			i++;
-		} else {
-			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
-					jsonStr + t[i].start);
-		}
-	}
-    return 0;
-}
 
