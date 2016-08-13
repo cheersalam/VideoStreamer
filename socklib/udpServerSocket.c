@@ -92,7 +92,7 @@ void *serverThread(void *args) {
             printf("ERROR on inet_ntoa\n");
         }
         udpSocketData->callback(buffer, nBytes);
-        printf("server received datagram from (%s) len = %d\n", hostaddrp, nBytes);
+        //printf("server received datagram from (%s) len = %d\n", hostaddrp, nBytes);
     }
     pthread_exit(NULL);
 }

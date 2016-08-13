@@ -8,7 +8,7 @@ int32_t read1Bytetoint32(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint32_
 	if ( (NULL == buffer) || (*pos > buffLen)) {
 		return -1;
 	}
-	*outVal = (uint32_t)buffer[*pos++];
+	*outVal = (uint32_t)buffer[(*pos)++];
 	return 0;
 }
 
@@ -17,7 +17,7 @@ int32_t read1Byteto1Byte(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint8_t
 	if ((NULL == buffer) || (*pos > buffLen)) {
 		return -1;
 	}
-	*outVal = buffer[*pos++];
+	*outVal = buffer[(*pos)++];
 	return 0;
 }
 
@@ -40,7 +40,7 @@ int32_t readXBytestoint32(uint8_t *buffer, int32_t buffLen, int32_t xBytes, int3
 		return -1;
 	}
 	for (i = 0; i < xBytes; i++) {
-		*outVal = (*outVal) | buffer[*pos++] << 8 * (xBytes - (i + 1));
+		*outVal = (*outVal) | (buffer[(*pos)++] << (8 * i));
 	}
 	return 0;
 }
