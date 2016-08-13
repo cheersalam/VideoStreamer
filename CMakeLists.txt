@@ -6,6 +6,10 @@ cmake_minimum_required (VERSION 3.2)
 set(PROJECT_NAME "BebopVideoStreamer")
 project (${PROJECT_NAME})
 
+
+
+set(CMAKE_VERBOSE_MAKEFILE on)
+
 #------------------------------------------------------------------------------
 # Compiler Flags options 
 #------------------------------------------------------------------------------
@@ -45,7 +49,7 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
     CACHE STRING "Choose the type of build: None Debug Release"
     FORCE)
 
-#set(LIB_INSTALL_DIR lib)
+set(LIB_INSTALL_DIR lib)
 include_directories(include/)
 link_directories(${PROJECT_BINARY_DIR}/lib/)
 
@@ -87,16 +91,21 @@ ExternalProject_Add(
                     && ${CMAKE_COMMAND} -E copy ./libcjson.a "${PROJECT_BINARY_DIR}/lib")
 
 ExternalProject_Add(
-                    ffmpeg
-                    GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
+                    VideoContainerGenerator
+                    GIT_REPOSITORY https://github.com/cheersalam/VideoContainerGenerator
                     GIT_TAG master
                     UPDATE_COMMAND ""
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/ffmpeg
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/VideoContainerGenerator
                     BUILD_IN_SOURCE 1
                     BUILD_ALWAYS 0
-                    CONFIGURE_COMMAND ./configure  --enable-pthreads --enable-static --enable-shared --prefix=${PROJECT_BINARY_DIR}
-                    BUILD_COMMAND make
-                    INSTALL_COMMAND make install)
+                    INSTALL_DIR ${PROJECT_BINARY_DIR}
+                    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}
+                    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory
+                   ${PROJECT_SOURCE_DIR}/thirdparty/VideoContainerGenerator/include ${PROJECT_BINARY_DIR}/include/ &&
+                   ${CMAKE_COMMAND} -E copy_directory
+                   ${PROJECT_SOURCE_DIR}/thirdparty/VideoContainerGenerator/lib ${PROJECT_BINARY_DIR}/lib/  &&
+                   ${CMAKE_COMMAND} -E copy_directory
+                   ${PROJECT_SOURCE_DIR}/thirdparty/VideoContainerGenerator/bin ${PROJECT_BINARY_DIR}/bin/)
 
 #------------------------------------------------------------------------------
 # Adding cJSON lib
