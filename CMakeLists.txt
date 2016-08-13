@@ -2,14 +2,9 @@
 # cheersalam@gmail.com
 # cmake file
 
-
 cmake_minimum_required (VERSION 3.2)
 set(PROJECT_NAME "BebopVideoStreamer")
 project (${PROJECT_NAME})
-
-
-
-# TODO: The version number
 
 #------------------------------------------------------------------------------
 # Compiler Flags options 
@@ -25,15 +20,17 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(VS_CXX_FLAGS_DEBUG "-g3 -O0")
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
-#Settings MSVC Macros, Add BirdHouse project macros here only
+#------------------------------------------------------------------------------
+#Settings MSVC Macros
+#------------------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     MESSAGE(" Configuring flags for MSVC:")
     set(VS_C_FLAGS "/W4 /WX /EHsc")
-#    set(VS_C_FLAGS_RELEASE "-O2")
-#    set(VS_C_FLAGS_DEBUG "-g3 -O0")
+    set(VS_C_FLAGS_RELEASE "-O2")
+    set(VS_C_FLAGS_DEBUG "-g3 -O0")
     set(VS_CXX_FLAGS "/W4 /WX /EHsc")
-#    set(VS_CXX_FLAGS_RELEASE "-O2")
-#    set(VS_CXX_FLAGS_DEBUG "-g3 -O0")
+    set(VS_CXX_FLAGS_RELEASE "-O2")
+    set(VS_CXX_FLAGS_DEBUG "-g3 -O0")
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
 #only append flags to existing flags
@@ -51,7 +48,6 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
 #set(LIB_INSTALL_DIR lib)
 include_directories(include/)
 link_directories(${PROJECT_BINARY_DIR}/lib/)
-
 
 #------------------------------------------------------------------------------
 # Project Settings: path for lib, bin and include folder
@@ -102,18 +98,25 @@ ExternalProject_Add(
                     BUILD_COMMAND make
                     INSTALL_COMMAND make install)
 
-
-
-
 #------------------------------------------------------------------------------
 # Adding cJSON lib
 #------------------------------------------------------------------------------
 set(JSON_PARSER_LIB libcjson.a -lm)
 
 #------------------------------------------------------------------------------
+# Adding FFMPEG lib
+#------------------------------------------------------------------------------
+set(FFMPEG_LIBS avcodec avdevice avfilter avformat avutil swresample swscale)
+
+#------------------------------------------------------------------------------
+# Adding socklib lib
+#------------------------------------------------------------------------------
+set(SOCK_LIB libsocklib.a)
+
+#------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
 #------------------------------------------------------------------------------
-#set(PROJECT_LIBS bv fcgi cJSON pthread m bv_media jpeg ${FFMPEG_LIBS})
+set(PROJECT_LIBS ${JSON_PARSER_LIB} ${FFMPEG_LIBS} ${SOCK_LIB})
 
 #------------------------------------------------------------------------------
 # Adding colors 
@@ -125,11 +128,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 # Sub Directories 
 #------------------------------------------------------------------------------
 add_subdirectory (socklib) 
-set(SOCK_LIB libsocklib.a)
-
 add_subdirectory (videostreamer) 
-
-
 
 #------------------------------------------------------------------------------
 # Configuration Summary 
