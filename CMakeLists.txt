@@ -2,7 +2,7 @@
 # cheersalam@gmail.com
 # cmake file
 
-cmake_minimum_required (VERSION 3.2)
+cmake_minimum_required (VERSION 3.0)
 set(PROJECT_NAME "BebopVideoStreamer")
 project (${PROJECT_NAME})
 
