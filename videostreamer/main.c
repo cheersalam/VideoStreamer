@@ -10,12 +10,16 @@
 #include "droneCommandHandler.h"
 #include "utilities/parrot.h"
 #include "utilities/utilities.h"
+#include "VideoContainerGenerator.h"
+#include "ffmpegDecoder.h"
 
 static void streamData(unsigned char *buffer, int32_t bufLen);
+static void saveClip(unsigned char *buffer, int32_t bufLen);
 
 //only global
 void *droneHandle = NULL;
 void *vcg = NULL;
+void *display = NULL;
 static int count = 0;
 
 int32_t main() {
@@ -39,21 +43,29 @@ int32_t main() {
         return 0;
     }
 
-#if 0
-    vcg = initContainer(640, 480, VCG_CONTAINER_MPEGTS, VCG_CODEC_ID_NONE, VCG_CODEC_ID_H264, 60);
+    vcg = initContainer(640, 368, VCG_CONTAINER_MPEGTS, VCG_CODEC_ID_NONE, VCG_CODEC_ID_H264, 1000, &saveClip);
     if(vcg == NULL) {
         printf("initContainer failed \n");
         return 1;
     }
-#endif
+
+	display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 640, 368);
+	if (display == NULL) {
+		printf("failed in creating a display\n");
+		return 1;
+	}
+
     sleep(1);
     err = startVideoStreaming(droneHandle);
     if (err < 0) {
         printf("Command send failed. Exit\n");
     }
 
-    while(count < 200)
+    while(1)
         sleep(1);
+
+	closeContainer(vcg);
+	closeDisplay(display);
     //closeContainer(vcg, "out.ts");
 }
 
@@ -90,8 +102,9 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
         case P_DATA_TYPE_LOW_LATENCT_DATA:
             //printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
             readXBytestoint32(buffer, bufLen, 4, &pos, &frameNum);
-            printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
-     //       err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
+            //printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
+            //err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
+            err = displayH264Frame(display, &buffer[pos + 1], bufLen - pos);
             sendAck(droneHandle, buffer, bufLen);
             frameCount++;
             count++;
@@ -110,4 +123,19 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
     }
 }
 
+
+
+static void saveClip(unsigned char *buffer, int32_t bufLen) {
+	FILE *fp = NULL;
+	char filename[64];
+	char extension[64];
+	static int32_t clipCount = 1;
+
+	if (buffer && bufLen > 0) {
+		sprintf(filename, "%s%d%s", "clip", clipCount++, ".ts");
+		fp = fopen(filename, "wb");
+		fwrite(buffer, bufLen, 1, fp);
+		fclose(fp);
+	}
+}
 

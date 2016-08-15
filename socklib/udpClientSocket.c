@@ -90,7 +90,7 @@ int32_t sendClientUdpData(void *handle, unsigned char *buffer, int32_t bufLen) {
     int32_t nBytes;
     UDP_CLIENT_SOCKET_T *udpSocketData = handle;
 
-    printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
+    //printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
     if (NULL == buffer) {
         return 0;
     }
@@ -101,7 +101,7 @@ int32_t sendClientUdpData(void *handle, unsigned char *buffer, int32_t bufLen) {
         printf("ERROR in sendto\n");
         return 0;
     }
-    printf("Command sent \n");
+    //printf("Command sent \n");
     return nBytes;
 }
 

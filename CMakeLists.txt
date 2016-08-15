@@ -123,9 +123,14 @@ set(FFMPEG_LIBS avcodec avdevice avfilter avformat avutil swresample swscale)
 set(SOCK_LIB libsocklib.a)
 
 #------------------------------------------------------------------------------
+# Adding VideoContainerGenerator lib
+#------------------------------------------------------------------------------
+set(VCG_LIB libffmpegContainerGenerator.a)
+
+#------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
 #------------------------------------------------------------------------------
-set(PROJECT_LIBS ${JSON_PARSER_LIB} ${FFMPEG_LIBS} ${SOCK_LIB})
+set(PROJECT_LIBS ${JSON_PARSER_LIB} ${FFMPEG_LIBS} ${SOCK_LIB} ${VCG_LIB} -lSDL)
 
 #------------------------------------------------------------------------------
 # Adding colors 
