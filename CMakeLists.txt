@@ -50,7 +50,7 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
     FORCE)
 
 set(LIB_INSTALL_DIR lib)
-include_directories(include/)
+include_directories(include/ /usr/include/ffmpeg/)
 link_directories(${PROJECT_BINARY_DIR}/lib/)
 
 #------------------------------------------------------------------------------

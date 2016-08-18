@@ -72,7 +72,6 @@ int32_t main() {
 static void streamData(unsigned char *buffer, int32_t bufLen) {
     int32_t pos = 0;
     int32_t err = 0;
-    int32_t datatype = 0;
     uint32_t bufferId = 0;
     uint32_t seqNum = 0;
     uint32_t size = 0;
@@ -128,7 +127,6 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 static void saveClip(unsigned char *buffer, int32_t bufLen) {
 	FILE *fp = NULL;
 	char filename[64];
-	char extension[64];
 	static int32_t clipCount = 1;
 
 	if (buffer && bufLen > 0) {
