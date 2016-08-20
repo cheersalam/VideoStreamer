@@ -19,11 +19,12 @@ typedef struct TCP_SOCKET_T {
     struct sockaddr_in serveraddr;
     pthread_t   threadId;
     int32_t isRunning;
+    RECEIVER_CB callback;
 }TCP_SOCKET_T;
 
 static void *clientThread(void *data);
 
-void *initTcpClientSocket(uint16_t port, char *hostname) {
+void *initTcpClientSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
     int32_t err = 0;
     TCP_SOCKET_T *tcpSocketData = NULL;
     struct hostent *server;
@@ -37,6 +38,7 @@ void *initTcpClientSocket(uint16_t port, char *hostname) {
     }
     memset(tcpSocketData, 0, sizeof(TCP_SOCKET_T));
     tcpSocketData->port = port;
+    tcpSocketData->callback = callback;
 
     tcpSocketData->fd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcpSocketData->fd < 0) {
@@ -63,12 +65,14 @@ void *initTcpClientSocket(uint16_t port, char *hostname) {
         return NULL;
     }
 
-    err = pthread_create(&tcpSocketData->threadId, NULL, clientThread, (void *)tcpSocketData);
-    if (err) {
-        printf("ERROR thread creation failed\n");
-        close(tcpSocketData->fd);
-        free(tcpSocketData);
-        return NULL;
+    if(tcpSocketData->callback) {
+    	err = pthread_create(&tcpSocketData->threadId, NULL, clientThread, (void *)tcpSocketData);
+    	if (err) {
+    		printf("ERROR thread creation failed\n");
+    		close(tcpSocketData->fd);
+    		free(tcpSocketData);
+    		return NULL;
+    	}
     }
     return tcpSocketData;
 }
@@ -85,11 +89,14 @@ void *clientThread(void *args) {
         if (nBytes < 0) {
             printf("ERROR in read\n");
         }
-        if (nBytes == 0) {
+        else if (nBytes == 0) {
             printf("%s:%s:%d Socket closed\n", __FILE__, __func__, __LINE__);
             tcpSocketData->isRunning = 0;
         }
-        printf("%s:%s:%d TCP clientThread Bytes Received = %d\n", __FILE__, __func__, __LINE__, nBytes );
+        else {
+        	tcpSocketData->callback(buffer, nBytes);
+        	printf("%s:%s:%d TCP clientThread Bytes Received = %d\n", __FILE__, __func__, __LINE__, nBytes );
+        }
     }
     pthread_exit(NULL);
 }
