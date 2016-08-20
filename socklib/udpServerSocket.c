@@ -68,8 +68,6 @@ void *serverThread(void *args) {
     int32_t nBytes                          = 0;
     uint32_t addrSize                       = 0;
     unsigned char buffer[MAX_RECV_BUF_LEN]  = {0};
-    struct hostent *hostp                   = NULL;
-    char *hostaddrp                         = NULL;
     struct sockaddr_in clientaddr; /* client addr */
     
 
@@ -81,18 +79,14 @@ void *serverThread(void *args) {
         if (nBytes < 0) {
             printf("ERROR in recvfrom\n");
         }
-        hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, sizeof(clientaddr.sin_addr.s_addr), AF_INET);
-
-        if (NULL == hostp) {
-            printf("ERROR on gethostbyaddr\n");
+        else if (nBytes == 0) {
+        	printf("Connection closed\n");
+        	udpSocketData->isRunning = 0;
         }
-            
-        hostaddrp = inet_ntoa(clientaddr.sin_addr);
-        if (hostaddrp == NULL) {
-            printf("ERROR on inet_ntoa\n");
+        else {
+        	//printf("Received packet from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+        	udpSocketData->callback(buffer, nBytes);
         }
-        udpSocketData->callback(buffer, nBytes);
-        //printf("server received datagram from (%s) len = %d\n", hostaddrp, nBytes);
     }
     pthread_exit(NULL);
 }
