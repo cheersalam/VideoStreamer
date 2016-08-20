@@ -97,7 +97,7 @@ ExternalProject_Add(
                     UPDATE_COMMAND ""
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/VideoContainerGenerator
                     BUILD_IN_SOURCE 1
-                    BUILD_ALWAYS 0
+                    BUILD_ALWAYS 1
                     INSTALL_DIR ${PROJECT_BINARY_DIR}
                     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}
                     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <signal.h>
 #include "config.h"
 #include "pthread.h"
 #include "socklibCommon.h"
@@ -16,11 +17,28 @@
 static void streamData(unsigned char *buffer, int32_t bufLen);
 static void saveClip(unsigned char *buffer, int32_t bufLen);
 
-//only global
+//only globals
+static volatile int32_t startExit = 0;
 void *droneHandle = NULL;
 void *vcg = NULL;
 void *display = NULL;
-static int count = 0;
+
+struct sigaction sigact;
+
+static void signalHandler(int sig){
+    if (sig == SIGINT) {
+    	printf("\nBye Bye... \n");
+    	startExit = 1;
+    }
+}
+
+void initSignals(void){
+    sigact.sa_handler = signalHandler;
+    sigemptyset(&sigact.sa_mask);
+    sigact.sa_flags = 0;
+    sigaction(SIGINT, &sigact, (struct sigaction *)NULL);
+}
+
 
 int32_t main() {
     int32_t err                     = 0;
@@ -29,6 +47,7 @@ int32_t main() {
     char *droneIp                   = "192.168.42.1";
     uint32_t dronePort              = 44444;
 
+    initSignals();
     handshakeHandle = handshakeWithdrone(droneIp, dronePort, &handshakeData);
     if (NULL == handshakeHandle) 
     {
@@ -61,8 +80,10 @@ int32_t main() {
         printf("Command send failed. Exit\n");
     }
 
-    while(1)
-        sleep(1);
+    while(!startExit) {
+    	sleep(1);
+    }
+
 
 	closeContainer(vcg);
 	closeDisplay(display);
@@ -106,7 +127,6 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
             err = displayH264Frame(display, &buffer[pos + 1], bufLen - pos);
             sendAck(droneHandle, buffer, bufLen);
             frameCount++;
-            count++;
             break;
 
         case P_DATA_TYPE_DATA_WITH_ACK:
