@@ -125,6 +125,9 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
             //printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
             //err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
             err = displayH264Frame(display, &buffer[pos + 1], bufLen - pos);
+            if (err == -1) {
+            	printf("Cannot display frame...\n");
+            }
             sendAck(droneHandle, buffer, bufLen);
             frameCount++;
             break;
