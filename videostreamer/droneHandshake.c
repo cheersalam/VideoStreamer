@@ -39,7 +39,7 @@ void * handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *h
 	HANDSHAKE_REQ_T handshakeRequest = { 0 };
 
     printf("%s:%s:%d\n", __FILE__, __func__, __LINE__ );
-	handshakeHandler = initTcpClientSocket(dronePort, droneIp);
+	handshakeHandler = initTcpClientSocket(dronePort, droneIp, NULL);
 	if (NULL == handshakeHandler) {
 		return NULL;
 	}

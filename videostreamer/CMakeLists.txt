@@ -30,6 +30,6 @@ set_target_properties(${COMP_NAME} PROPERTIES
 set_target_properties(${COMP_NAME} PROPERTIES 
                       BUILD_WITH_INSTALL_RPATH true
                       ENABLE_EXPORTS ON)
-target_link_libraries (${COMP_NAME} ${JSON_PARSER_LIB} ${SOCK_LIB} ${FFMPEG_LIBS} -lpthread)
+target_link_libraries (${COMP_NAME} ${PROJECT_LIBS}  -lpthread)
 
 
