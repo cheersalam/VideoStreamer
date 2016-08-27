@@ -1,2 +1,10 @@
-jsmn
-debug
+
+#igonoring directories
+/thirdparty
+/debug
+/release
+
+#ignoring eclipse files
+.cproject
+.project
+

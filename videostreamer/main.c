@@ -14,15 +14,17 @@
 #include "utilities/utilities.h"
 #include "VideoContainerGenerator.h"
 #include "ffmpegDecoder.h"
+#include "createPlaylist.h"
 
 static void streamData(unsigned char *buffer, int32_t bufLen);
-static void saveClip(unsigned char *buffer, int32_t bufLen);
+static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec);
 
 //only globals
 static volatile int32_t startExit = 0;
 void *droneHandle = NULL;
 void *vcg = NULL;
 void *display = NULL;
+void *playlist = NULL;
 struct sigaction sigact;
 
 
@@ -168,6 +170,10 @@ int32_t main(int argc, char **argv) {
 		printf("Command send failed. Exit\n");
 	}
 
+	playlist = initPlayList("/var/www/html/parrot", "test");
+	if(playlist == NULL) {
+		startExit = 1;
+	}
 	while (!startExit) {
 		sleep(1);
 	}
@@ -210,7 +216,7 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 			//printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
 			readXBytestoint32(buffer, bufLen, 4, &pos, &frameNum);
 			//printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
-			//err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
+			err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
 			err = displayH264Frame(display, &buffer[pos + 1], bufLen - pos);
 			if (err == -1) {
 				startExit = 1;
@@ -233,7 +239,7 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 	}
 }
 
-static void saveClip(unsigned char *buffer, int32_t bufLen) {
+static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec) {
 	FILE *fp = NULL;
 	char filename[64];
 	static int32_t clipCount = 1;
@@ -243,6 +249,7 @@ static void saveClip(unsigned char *buffer, int32_t bufLen) {
 		fp = fopen(filename, "wb");
 		fwrite(buffer, bufLen, 1, fp);
 		fclose(fp);
+		addFileToPlaylist(playlist, durationMsec, filename, "/var/www/html/parrot");
 	}
 }
 
