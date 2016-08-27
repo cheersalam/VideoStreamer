@@ -93,7 +93,7 @@ ExternalProject_Add(
 ExternalProject_Add(
                     VideoContainerGenerator
                     GIT_REPOSITORY https://github.com/cheersalam/VideoContainerGenerator
-                    GIT_TAG origin/master
+                    GIT_TAG master
                     UPDATE_COMMAND git pull
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/VideoContainerGenerator
                     BUILD_IN_SOURCE 1
@@ -123,9 +123,9 @@ set(FFMPEG_LIBS avcodec avdevice avfilter avformat avutil swresample swscale)
 set(SOCK_LIB libsocklib.a)
 
 #------------------------------------------------------------------------------
-# Adding VideoContainerGenerator lib
+# Adding ffmpegWrapper lib
 #------------------------------------------------------------------------------
-set(VCG_LIB libffmpegContainerGenerator.a)
+set(VCG_LIB libffmpegWrapper.a)
 
 #------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
