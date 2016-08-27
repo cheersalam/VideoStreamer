@@ -14,9 +14,10 @@
 #include "utilities/utilities.h"
 #include "VideoContainerGenerator.h"
 #include "ffmpegDecoder.h"
+#include "createPlaylist.h"
 
 static void streamData(unsigned char *buffer, int32_t bufLen);
-static void saveClip(unsigned char *buffer, int32_t bufLen);
+static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec);
 
 //only globals
 static volatile int32_t startExit = 0;
@@ -169,7 +170,7 @@ int32_t main(int argc, char **argv) {
 		printf("Command send failed. Exit\n");
 	}
 
-	playlist = initPlayList("./");
+	playlist = initPlayList("/var/www/html/parrot", "test");
 	if(playlist == NULL) {
 		startExit = 1;
 	}
@@ -238,7 +239,7 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 	}
 }
 
-static void saveClip(unsigned char *buffer, int32_t bufLen) {
+static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec) {
 	FILE *fp = NULL;
 	char filename[64];
 	static int32_t clipCount = 1;
@@ -248,7 +249,7 @@ static void saveClip(unsigned char *buffer, int32_t bufLen) {
 		fp = fopen(filename, "wb");
 		fwrite(buffer, bufLen, 1, fp);
 		fclose(fp);
-		addFileToPlaylist(playlist, 1000, filename);
+		addFileToPlaylist(playlist, durationMsec, filename, "/var/www/html/parrot");
 	}
 }
 

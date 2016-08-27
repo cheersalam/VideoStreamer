@@ -93,8 +93,8 @@ ExternalProject_Add(
 ExternalProject_Add(
                     VideoContainerGenerator
                     GIT_REPOSITORY https://github.com/cheersalam/VideoContainerGenerator
-                    GIT_TAG master
-                    UPDATE_COMMAND ""
+                    GIT_TAG origin/master
+                    UPDATE_COMMAND git pull
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/VideoContainerGenerator
                     BUILD_IN_SOURCE 1
                     BUILD_ALWAYS 1
