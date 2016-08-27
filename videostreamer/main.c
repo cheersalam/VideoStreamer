@@ -23,6 +23,7 @@ static volatile int32_t startExit = 0;
 void *droneHandle = NULL;
 void *vcg = NULL;
 void *display = NULL;
+void *playlist = NULL;
 struct sigaction sigact;
 
 
@@ -168,6 +169,10 @@ int32_t main(int argc, char **argv) {
 		printf("Command send failed. Exit\n");
 	}
 
+	playlist = initPlayList("./");
+	if(playlist == NULL) {
+		startExit = 1;
+	}
 	while (!startExit) {
 		sleep(1);
 	}
@@ -210,7 +215,7 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 			//printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
 			readXBytestoint32(buffer, bufLen, 4, &pos, &frameNum);
 			//printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
-			//err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
+			err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
 			err = displayH264Frame(display, &buffer[pos + 1], bufLen - pos);
 			if (err == -1) {
 				startExit = 1;
@@ -243,6 +248,7 @@ static void saveClip(unsigned char *buffer, int32_t bufLen) {
 		fp = fopen(filename, "wb");
 		fwrite(buffer, bufLen, 1, fp);
 		fclose(fp);
+		addFileToPlaylist(playlist, 1000, filename);
 	}
 }
 
