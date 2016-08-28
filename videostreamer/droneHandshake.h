@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #ifndef DRONE_HANDSHAKE_H
 #define DRONE_HANDSHAKE_H
 

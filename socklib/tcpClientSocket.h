@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #ifndef TCP_CLIENT_SOCKET_H
 #define TCP_CLIENT_SOCKET_H
 #include <stdint.h>

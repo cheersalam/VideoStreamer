@@ -1,9 +1,6 @@
 #------------------------------------------------------------------------------
 # Mohammad Alam
 # cheersalam@gmail.com
-# thank you license. Send a note of thanks :)
-# Generic file for generating library. This cmake file will use folder name as
-# library name and copy all header files to include folder
 #------------------------------------------------------------------------------
 
 cmake_minimum_required (VERSION 2.8)

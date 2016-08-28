@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>

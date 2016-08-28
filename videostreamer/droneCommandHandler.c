@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

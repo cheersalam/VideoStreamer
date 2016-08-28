@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #ifndef UDP_SERVER_SOCKET_H
 #define UDP_SERVER_SOCKET_H
 

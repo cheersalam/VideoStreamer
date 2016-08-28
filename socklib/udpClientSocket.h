@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #ifndef UDP_CLIENT_SOCKET_H
 #define UDP_CLIENT_SOCKET_H
 

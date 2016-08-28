@@ -1,3 +1,6 @@
+#
+# Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+#
 
 cmake_minimum_required (VERSION 2.8)
 

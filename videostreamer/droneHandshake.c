@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #include "droneHandshake.h"
 #include "tcpClientSocket.h"
 #include "cJSON.h"

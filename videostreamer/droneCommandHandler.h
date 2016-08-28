@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #ifndef DRONE_COMMAND_HANDLER_H
 #define DRONE_COMMAND_HANDLER_H
 

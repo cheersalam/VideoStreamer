@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #include "udpServerSocket.h"
 #include <arpa/inet.h>
 #include <pthread.h>

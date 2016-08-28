@@ -1,3 +1,5 @@
+#ifndef VS_PARROT_H
+#define VS_PARROT_H
 
 typedef enum {
 	P_DATA_TYPE_ACK=1,
@@ -5,3 +7,5 @@ typedef enum {
 	P_DATA_TYPE_LOW_LATENCT_DATA,
 	P_DATA_TYPE_DATA_WITH_ACK
 }PARROT_DATA_TYPES;
+
+#endif //VS_PARROT_H

@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #include "tcpClientSocket.h"
 #include <stdio.h>
 #include <stdlib.h>

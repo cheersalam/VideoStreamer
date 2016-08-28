@@ -1,3 +1,7 @@
+/*
+ * Copyright © 2016 Mohammad Alam <cheersalam@gmail.com>
+ */
+
 #include "udpClientSocket.h"
 #include <assert.h>
 #include <pthread.h>
