@@ -34,7 +34,7 @@ A fun project to receive video stream from **Parrot Drone** and render it on scr
 ```Linux
 $ mkdir /var/www/html/parrot/  (for HLS streaming)
 $ sudo chown pi:pi /var/www/html/parrot/  (on Pi, for other *nix use your machine user)
-$ cd VideoContainerGenerator
+$ cd VideoStreamer
 $ mkdir debug
 $ cd debug
 $ cmake ..
@@ -46,7 +46,7 @@ $ make
 # Running Application
 (Connect to Bebop WiFi)
 ```Linux
-$ cd VideoContainerGenerator/debug/bin
+$ cd VideoStreamer/debug/bin
 $ export LD_LIBRARY_PATH=../lib
 $ ./BebopVideoStream
 ``` 
