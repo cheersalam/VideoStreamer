@@ -314,11 +314,16 @@ static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec
 		sprintf(filename, "%s%d%s", globalArgs.outputFileName, clipCount++, ".ts");
 		sprintf(filenameWithPath, "%s/%s", globalArgs.outputFilePath, filename);
 		fp = fopen(filenameWithPath, "wb");
-		fwrite(buffer, bufLen, 1, fp);
-		fclose(fp);
-		if(globalArgs.enableHls) {
-			addFileToPlaylist(playlist, durationMsec, filename, "");
+		if (NULL != fp) {
+			fwrite(buffer, bufLen, 1, fp);
+			fclose(fp);
+			if(globalArgs.enableHls) {
+				addFileToPlaylist(playlist, durationMsec, filename, "");
+			}
+		}else {
+			printf("Cannot open file to write `%s` Make sure folder exists\n", filenameWithPath);
 		}
+
 	}
 }
 
