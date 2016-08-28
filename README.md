@@ -9,7 +9,7 @@ A fun project to receive video stream from **Parrot Drone** and render it on scr
 **TODO:**
 - 
 
-1. Create HLS stream from incoming stream
+1. ~~Create HLS stream from incoming stream~~
 2. Add Audio
 3. Create RTSP stream from incoming stream
 4. Create RTMP stream from incoming stream
@@ -18,8 +18,9 @@ A fun project to receive video stream from **Parrot Drone** and render it on scr
  * `cmake`: for compiling project
  * `yasm` needed by ffmpeg
  * `libsdl-dev` for rendering  
+ * `lighttpd` for web server (HLS streaming)
 
-  `sudo apt-get install cmake yasm libsdl-dev`
+  `sudo apt-get install cmake yasm libsdl-dev lighttpd`
 
 
 # Compiling project
@@ -31,6 +32,8 @@ A fun project to receive video stream from **Parrot Drone** and render it on scr
  * Compile whole project
  
 ```Linux
+$ mkdir /var/www/html/parrot/  (for HLS streaming)
+$ sudo chown pi:pi /var/www/html/parrot/  (on Pi, for other *nix use your machine user)
 $ cd VideoContainerGenerator
 $ mkdir debug
 $ cd debug
@@ -41,6 +44,7 @@ $ make
 
 
 # Running Application
+(Connect to Bebop WiFi)
 ```Linux
 $ cd VideoContainerGenerator/debug/bin
 $ export LD_LIBRARY_PATH=../lib
@@ -53,6 +57,16 @@ To run application for different Ip address and port
 ```Linux
 $ ./BebopVideoStream -i 192.168.43.1 -p 55555
 ``` 
+
+# For HLS streaming
+```http://<pi/*nix ip address>/parrot/parrot.m3u8```
+
+> Note: machine running software and on PC you want to receive HLS streaming should be on same network
+
+There are two ways you can achieve that
+On your pi connect wired network to your local LAN and use wifi to connect to Bebop, then on machine you want to receive HLS connect to same local LAN and use pi ip adress for HLS
+
+On machine you want to receive HLS connect to Drone WiFi and use pi ip address for recieving HLS streaming.
 
 # Verified on
 - **Parrot Bebop2 on Ubuntu/Fedora and Raspberry Pi3**
