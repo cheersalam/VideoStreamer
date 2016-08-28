@@ -19,20 +19,17 @@
 static void streamData(unsigned char *buffer, int32_t bufLen);
 static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec);
 
-//only globals
-static volatile int32_t startExit = 0;
-void *droneHandle = NULL;
-void *vcg = NULL;
-void *display = NULL;
-void *playlist = NULL;
-struct sigaction sigact;
-
-
 typedef struct GLOBALARGS_T{
-	char *ipAddress; 		// -i ip address of drone
+	int32_t enableHls;		// -h enable HLS streaming
+	int32_t enableFileSave;  // -s save video files
+	int32_t enableDisplay;   // -r save video files
+	int32_t segmentDuration; // -t segment duration in sec
 	int16_t port;  			// -p drone command listener port
+	char *ipAddress; 		// -i ip address of drone
 	char *outputFileName; 	// -f output file name
-	char *path;				// -d output file path
+	char *outputFilePath;	// -d output file path
+	char *playlistFileName;	// -u m3u8 file name
+	char *playlistFilePath;	// -v output file path
 }GLOBALARGS_T;
 
 
@@ -41,10 +38,27 @@ static const char *optString = "i:p:f:d:";
 static struct option longOptions[] = {
 	{ "ip", required_argument, NULL, 'i' },
 	{ "port", required_argument, NULL, 'p' },
-	{ "filemane", required_argument, NULL, 'f' },
-	{ "path", required_argument, NULL, 'd' },
+	{ "outputFileName", required_argument, NULL, 'f' },
+	{ "outputFilePath", required_argument, NULL, 'd' },
+	{ "playlistFileName", required_argument, NULL, 'u' },
+	{ "playlistFilePath", required_argument, NULL, 'v' },
+	{ "enableHls", no_argument, NULL, 'h' },
+	{ "enableFileSave", no_argument, NULL, 's' },
+	{ "enableDisplay", no_argument, NULL, 'r' },
+	{ "segmentDuration", required_argument, NULL, 't' },
 	{ NULL, no_argument, NULL, 0 }
 };
+
+
+//only globals
+static volatile int32_t startExit = 0;
+void *droneHandle = NULL;
+void *vcg = NULL;
+void *display = NULL;
+void *playlist = NULL;
+struct sigaction sigact;
+static GLOBALARGS_T globalArgs;
+
 
 static void signalHandler(int sig) {
 	if (sig == SIGINT) {
@@ -61,10 +75,16 @@ void initSignals(void) {
 }
 
 void printSettings(GLOBALARGS_T *globalArgs) {
-	printf("Drone IP address    = %s\n", globalArgs->ipAddress);
-	printf("Drone command port  = %hu\n", globalArgs->port);
-	printf("File prefix         = %s\n", globalArgs->outputFileName);
-	printf("File path           = %s\n", globalArgs->path);
+	printf("Drone IP address   		= %s\n", globalArgs->ipAddress);
+	printf("Drone command port 		= %hu\n", globalArgs->port);
+	printf("Enable HLS    			= %d\n", globalArgs->enableHls);
+	printf("Enable FileSave    		= %d\n", globalArgs->enableFileSave);
+	printf("Enable Display    		= %d\n", globalArgs->enableDisplay);
+	printf("Video File duration		= %d\n", globalArgs->segmentDuration);
+	printf("Video File prefix  		= %s\n", globalArgs->outputFileName);
+	printf("Video File path    		= %s\n", globalArgs->outputFilePath);
+	printf("Playlist file prefix	= %s\n", globalArgs->playlistFileName);
+	printf("Playlist file path 		= %s\n", globalArgs->playlistFilePath);
 }
 
 void printUsage() {
@@ -76,14 +96,19 @@ int32_t main(int argc, char **argv) {
 	int32_t c = 0;
 	void *handshakeHandle = NULL;
 	HANDSHAKE_DATA_T handshakeData = { 0 };
-	static GLOBALARGS_T globalArgs;
 	char *droneIp = "192.168.42.1";
 	uint32_t dronePort = 44444;
 
 	globalArgs.ipAddress = "192.168.42.1";
 	globalArgs.port = 44444;
 	globalArgs.outputFileName = "droneVideo";
-	globalArgs.path = "./";
+	globalArgs.outputFilePath = "/var/www/html/parrot";
+	globalArgs.playlistFileName = "parrot";
+	globalArgs.playlistFilePath = "/var/www/html/parrot";
+	globalArgs.enableFileSave = 1;
+	globalArgs.enableHls = 1;
+	globalArgs.enableDisplay = 1;
+	globalArgs.segmentDuration = 1;
 
 	while (1) {
 		int optionIndex = 0;
@@ -115,13 +140,43 @@ int32_t main(int argc, char **argv) {
 			break;
 
 		case 'f':
-			printf("Setting file name prefix `%s'\n", optarg);
+			printf("Setting Video File name prefix `%s'\n", optarg);
 			globalArgs.outputFileName = optarg;
 			break;
 
 		case 'd':
-			printf("Setting path `%s'\n", optarg);
-			globalArgs.path = optarg;
+			printf("Setting Video File `%s'\n", optarg);
+			globalArgs.outputFilePath = optarg;
+			break;
+
+		case 'u':
+			printf("Setting Playlist File name prefix `%s'\n", optarg);
+			globalArgs.playlistFileName = optarg;
+			break;
+
+		case 'v':
+			printf("Setting Playlist path `%s'\n", optarg);
+			globalArgs.playlistFilePath = optarg;
+			break;
+
+		case 'h':
+			printf("Enabling HLS Streaming \n");
+			globalArgs.enableHls = 1;
+			break;
+
+		case 's':
+			printf("Enabling File saving \n");
+			globalArgs.enableFileSave = 1;
+			break;
+
+		case 'r':
+			printf("Enabling Display \n");
+			globalArgs.enableDisplay = 1;
+			break;
+
+		case 't':
+			printf("Setting segment duration \n");
+			globalArgs.segmentDuration = atoi(optarg);
 			break;
 
 		case ':':
@@ -152,35 +207,39 @@ int32_t main(int argc, char **argv) {
 	}
 
 	vcg = initContainer(640, 368, VCG_CONTAINER_MPEGTS, VCG_CODEC_ID_NONE,
-			VCG_CODEC_ID_H264, 1000, &saveClip);
+			VCG_CODEC_ID_H264, globalArgs.segmentDuration * 1000, &saveClip);
 	if (vcg == NULL) {
 		printf("initContainer failed \n");
 		return 1;
 	}
 
-	display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 640, 368);
-	if (display == NULL) {
-		printf("failed in creating a display\n");
-		return 1;
+	if(globalArgs.enableDisplay) {
+		display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 640, 368);
+		if (display == NULL) {
+			printf("failed in creating a display\n");
+			return 1;
+		}
 	}
 
-	sleep(1);
 	err = startVideoStreaming(droneHandle);
 	if (err < 0) {
 		printf("Command send failed. Exit\n");
 	}
 
-	playlist = initPlayList("/var/www/html/parrot", "test");
-	if(playlist == NULL) {
-		startExit = 1;
+	if(globalArgs.enableHls) {
+		playlist = initPlayList(globalArgs.playlistFilePath, globalArgs.playlistFileName);
+		if(playlist == NULL) {
+			startExit = 1;
+		}
 	}
+
 	while (!startExit) {
 		sleep(1);
 	}
 
 	closeContainer(vcg);
 	closeDisplay(display);
-	//closeContainer(vcg, "out.ts");
+	finalizePlaylist(playlist);
 }
 
 static void streamData(unsigned char *buffer, int32_t bufLen) {
@@ -216,12 +275,18 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 			//printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
 			readXBytestoint32(buffer, bufLen, 4, &pos, &frameNum);
 			//printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
-			err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
-			err = displayH264Frame(display, &buffer[pos + 1], bufLen - pos);
+
+			if(globalArgs.enableFileSave || globalArgs.enableHls) {
+				err = writeFrame(vcg, &buffer[pos + 1], bufLen - pos, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
+			}
+			if(globalArgs.enableDisplay) {
+				err = displayH264Frame(display, &buffer[pos + 1], bufLen - pos);
+			}
 			if (err == -1) {
-				startExit = 1;
+				//startExit = 1;
 				printf("Cannot display frame...\n");
 			}
+
 			sendAck(droneHandle, buffer, bufLen);
 			frameCount++;
 			break;
@@ -242,14 +307,18 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec) {
 	FILE *fp = NULL;
 	char filename[64];
-	static int32_t clipCount = 1;
+	char filenameWithPath[4096];
+	static int32_t clipCount = 0;
 
 	if (buffer && bufLen > 0) {
-		sprintf(filename, "%s%d%s", "clip", clipCount++, ".ts");
-		fp = fopen(filename, "wb");
+		sprintf(filename, "%s%d%s", globalArgs.outputFileName, clipCount++, ".ts");
+		sprintf(filenameWithPath, "%s/%s", globalArgs.outputFilePath, filename);
+		fp = fopen(filenameWithPath, "wb");
 		fwrite(buffer, bufLen, 1, fp);
 		fclose(fp);
-		addFileToPlaylist(playlist, durationMsec, filename, "/var/www/html/parrot");
+		if(globalArgs.enableHls) {
+			addFileToPlaylist(playlist, durationMsec, filename, "");
+		}
 	}
 }
 
