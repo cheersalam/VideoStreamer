@@ -75,4 +75,6 @@ On machine you want to receive HLS connect to Drone WiFi and use pi ip address f
 # Bugs, Improvements or feature addition
 mailto: cheersalam@gmail.com
 
+![alt tag](https://github.com/cheersalam/VideoStreamer/blob/master/test/Delay_measurement.JPG)
+
 # License
