@@ -82,3 +82,5 @@ mailto: cheersalam@gmail.com
 ![alt tag](https://github.com/cheersalam/VideoStreamer/blob/master/test/Setup.JPG)
 
 # License
+
+LGPL
