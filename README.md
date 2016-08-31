@@ -2,10 +2,6 @@
 
 A fun project to receive video stream from **Parrot Drone** and render it on screen without using any Parrot SDK. This project can also be used for creating mpegts files. it uses ffmpeg for decoding and SDL for rendering.
 
-**VideoContainerGenerator:** This project depends on another project called VideoContainerGenerator (https://*github.com/cheersalam/VideoContainerGenerator.git*) for rendering and mpegts container generation. You don't need to install this project. VideoStreamer will automatically compile and install VideoContainerGenerator. It compiles ffmpeg in **LGPL v1.2** version and uses ffmpeg's inbuilt h264 decoder.
-
-
-
 **TODO:**
 - 
 
