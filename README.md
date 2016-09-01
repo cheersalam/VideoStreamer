@@ -20,8 +20,9 @@ A fun project to receive video stream from **Parrot Drone** and render it on scr
 
 
 # Compiling project
+ Compilation needs internet connection for downloading dependencies. Once downloaded and compiled it doesn't need internet connection. 
+ 
  Go to root of the project
-
  * create debug directory
  * Enter debug directory
  * generate makefiles using cmake
