@@ -14,6 +14,7 @@
 #include <netdb.h> 
 #include <assert.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 
 #define MAX_RECV_BUF_LEN (1024 * 1024)
 
@@ -61,7 +62,8 @@ void *initTcpClientSocket(uint16_t port, char *hostname, RECEIVER_CB callback) {
     memset(&tcpSocketData->serveraddr, 0, sizeof(tcpSocketData->serveraddr));
     tcpSocketData->serveraddr.sin_family = AF_INET;
     tcpSocketData->serveraddr.sin_port = htons(port);
-    memcpy((char *)&tcpSocketData->serveraddr.sin_addr.s_addr, (char *)server->h_addr, server->h_length);
+    tcpSocketData->serveraddr.sin_addr.s_addr = inet_addr(hostname);
+    //memcpy((char *)&tcpSocketData->serveraddr.sin_addr.s_addr, (char *)server->h_addr, server->h_length);
 
     if (connect(tcpSocketData->fd, (struct sockaddr *)&tcpSocketData->serveraddr, sizeof(tcpSocketData->serveraddr)) < 0) {
         printf("Connect failed for %s\n", hostname);
