@@ -130,7 +130,7 @@ set(VCG_LIB libffmpegWrapper.a)
 #------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
 #------------------------------------------------------------------------------
-set(PROJECT_LIBS ${JSON_PARSER_LIB} ${FFMPEG_LIBS} ${SOCK_LIB} ${VCG_LIB} -lSDL)
+set(PROJECT_LIBS ${JSON_PARSER_LIB} ${SOCK_LIB} ${VCG_LIB} ${FFMPEG_LIBS} -lSDL)
 
 #------------------------------------------------------------------------------
 # Adding colors 
