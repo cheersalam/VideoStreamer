@@ -17,9 +17,11 @@
 typedef struct DRONE_SOCKET_HANDLES {
     void *senderHandle;
     void *receiverHandle;
+    void *rtpHandle;
+    void *rtcpHandle;
 }DRONE_SOCKET_HANDLES;
 
-void *initDroneComm(char *droneIp, uint16_t dronePort, uint16_t receiverPort, RECEIVER_CB callback) {
+void *initDroneComm(char *droneIp, uint16_t dronePort, uint16_t receiverPort, uint16_t rtpPort, uint16_t rtcpPort, RECEIVER_CB streamCallback, RECEIVER_CB rtpCallback, RECEIVER_CB rtcpCallback) {
     DRONE_SOCKET_HANDLES *droneSocketHandles = NULL;
     
     printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
@@ -33,13 +35,28 @@ void *initDroneComm(char *droneIp, uint16_t dronePort, uint16_t receiverPort, RE
         return NULL;
     }
 
-    droneSocketHandles->receiverHandle = initUdpServerSocket(receiverPort, droneIp, callback);
+    droneSocketHandles->receiverHandle = initUdpServerSocket(receiverPort, droneIp, streamCallback);
     if (NULL == droneSocketHandles->receiverHandle)
     {
         closeUdpClient(droneSocketHandles->senderHandle);
         printf("Start Receiver failed. Exit\n");
         return 0;
     }
+   
+/*    if (rtpPort) {
+        droneSocketHandles->rtpHandle = initUdpServerSocket(rtpPort, droneIp, rtpCallback);
+        if (NULL == droneSocketHandles->rtpHandle) {
+            printf("RTP socket failed\n");
+        }
+    }
+
+    if (rtcpPort) {
+        droneSocketHandles->rtcpHandle = initUdpServerSocket(rtcpPort, droneIp, rtcpCallback);
+        if (NULL == droneSocketHandles->rtcpHandle) {
+            printf("RTCP socket failed\n");
+        }
+    }*/
+
     return droneSocketHandles;
 }
 

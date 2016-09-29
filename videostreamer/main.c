@@ -20,8 +20,20 @@
 #include "ffmpegDecoder.h"
 #include "createPlaylist.h"
 
+#define MAX_RTP_FRAME_LEN (5 * 1024 * 1024)
+
 static void streamData(unsigned char *buffer, int32_t bufLen);
 static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec);
+static void rtpData(unsigned char *buffer, int32_t bufLen);
+static void rtcpData(unsigned char *buffer, int32_t bufLen);
+static void parseRTPHeader(unsigned char *buffer, int32_t bufLen);
+
+static unsigned char rtpFrame[MAX_RTP_FRAME_LEN];
+static uint32_t rtpFrameLen = 0;
+static uint16_t rtpLastSeq = 0;
+static uint32_t rtpLastTimestamp = 0;
+static uint16_t rtpMarkerPos = 0x0080;
+static int32_t dropPacket = 0;
 
 typedef struct GLOBALARGS_T{
 	int32_t enableHls;		// -h enable HLS streaming
@@ -35,6 +47,16 @@ typedef struct GLOBALARGS_T{
 	char *playlistFileName;	// -u m3u8 file name
 	char *playlistFilePath;	// -v output file path
 }GLOBALARGS_T;
+
+typedef struct RTP_HEADER_T{
+	int32_t markerBit;
+    int32_t csrcCount;
+    int32_t payloadType;
+    int32_t seqNum;
+    int32_t timestamp;
+    int32_t ssrc;
+    int32_t csrc[16];
+}RTP_HEADER_T;
 
 
 static const char *optString = "i:p:f:d:";
@@ -197,14 +219,14 @@ int32_t main(int argc, char **argv) {
 	}
 	printSettings(&globalArgs);
 	initSignals();
-	handshakeHandle = handshakeWithdrone(droneIp, dronePort, &handshakeData);
+	handshakeHandle = handshakeWithdrone(globalArgs.ipAddress, globalArgs.port, &handshakeData);
 	if (NULL == handshakeHandle) {
 		printf("Handshake failed. Exit\n");
 		return 0;
 	}
 
-	droneHandle = initDroneComm(droneIp, handshakeData.c2d_port, D2C_PORT,
-			&streamData);
+	droneHandle = initDroneComm(globalArgs.ipAddress, handshakeData.c2d_port, D2C_PORT, handshakeData.arstream2_server_stream_port, handshakeData.arstream2_server_control_port,
+			&streamData, &rtpData, &rtcpData);
 	if (NULL == droneHandle) {
 		printf("initDroneComm failed. Exit\n");
 		return 0;
@@ -218,7 +240,8 @@ int32_t main(int argc, char **argv) {
 	}
 
 	if(globalArgs.enableDisplay) {
-		display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 640, 368);
+		display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 1920, 1080);
+	//	display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 640, 368);
 		if (display == NULL) {
 			printf("failed in creating a display\n");
 			return 1;
@@ -268,10 +291,12 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 	if (dataType) {
 		switch (dataType) {
 		case P_DATA_TYPE_ACK:
+			sendAck(droneHandle, buffer, bufLen);
 			//printf("P_DATA_TYPE_ACK \n");
 			break;
 
 		case P_DATA_TYPE_DATA:
+			sendAck(droneHandle, buffer, bufLen);
 			//printf("P_DATA_TYPE_DATA \n");
 			break;
 
@@ -308,6 +333,61 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
 	}
 }
 
+static void rtpData(unsigned char *buffer, int32_t bufLen) {
+	int32_t pos = 0;
+	int32_t err;
+	uint16_t shortVal = 0;
+	uint16_t seqNum = 0;
+	RTP_HEADER_T *rtpHeader = NULL;;
+	uint32_t timeStamp = 0;
+	static int frameCount = 0;
+	rtpHeader = (RTP_HEADER_T *)malloc(sizeof(struct RTP_HEADER_T));
+	memset(rtpHeader, 0, sizeof(struct RTP_HEADER_T));
+
+	err = readShortToShort(buffer, bufLen, &pos, &shortVal);
+	printf("Short = %x pos = %d\n", shortVal, pos);
+
+	err = readShortToShort(buffer, bufLen, &pos, &seqNum);
+	printf("seqNum = %hu pos = %d\n", seqNum, pos);
+
+	err = read4Bytetoint32(buffer, bufLen, &pos, &timeStamp);
+	printf("timestamp = %u pos = %d\n", timeStamp, pos);
+
+	if (!rtpLastSeq || (seqNum != rtpLastSeq + 1)) {
+		printf("RTP packet lost. Dropping seqNum = %hu \n", seqNum);
+		dropPacket = 1;
+	}
+
+	rtpLastSeq = seqNum;
+	rtpLastTimestamp = timeStamp;
+	if (shortVal & rtpMarkerPos) {
+		printf("Marker bit set \n");
+		if(!dropPacket) {
+			memcpy(&rtpFrame[rtpFrameLen], &buffer[16], bufLen - 16);
+			rtpFrameLen += bufLen - 16;
+			printf("Display Frame of len = %d\n", rtpFrameLen);
+			writeFrame(vcg, &rtpFrame[0], rtpFrameLen, VCG_FRAME_VIDEO_COMPLETE, 33 * frameCount, 33 * frameCount);
+			//displayH264Frame(display, &rtpFrame[0], rtpFrameLen);
+		}
+		dropPacket = 0;
+		frameCount++;
+		memset(rtpFrame, 0, MAX_RTP_FRAME_LEN);
+		rtpFrame[3] = 0x01;
+		rtpFrameLen = 4;
+	}
+	else {
+		memcpy(&rtpFrame[rtpFrameLen], &buffer[16], bufLen - 16);
+		rtpFrameLen += bufLen - 16;
+		printf("rtpFrameLen = %d\n", rtpFrameLen);
+	}
+}
+
+static void rtcpData(unsigned char *buffer, int32_t bufLen) {
+	int32_t pos = 0;
+
+    printf("RTCP data received %d\n", bufLen);
+}
+
 static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec) {
 	FILE *fp = NULL;
 	char filename[64];
@@ -327,7 +407,6 @@ static void saveClip(unsigned char *buffer, int32_t bufLen, int64_t durationMsec
 		}else {
 			printf("Cannot open file to write `%s` Make sure folder exists\n", filenameWithPath);
 		}
-
 	}
 }
 

@@ -12,6 +12,8 @@ char *convertToJson(HANDSHAKE_REQ_T *handshakeRequest) {
 	cJSON_AddNumberToObject(root, "d2c_port", handshakeRequest->d2c_port);
 	cJSON_AddStringToObject(root, "controller_name", handshakeRequest->controller_name);
 	cJSON_AddStringToObject(root, "controller_type", handshakeRequest->controller_type);
+	cJSON_AddNumberToObject(root, "arstream2_client_stream_port", handshakeRequest->arstream2_client_stream_port);
+	cJSON_AddNumberToObject(root, "arstream2_client_control_port", handshakeRequest->arstream2_client_control_port);
 	char *ptr = cJSON_Print(root);
 	cJSON_Delete(root);
 	return ptr;
@@ -30,6 +32,15 @@ int32_t parseJsonToHandshakeData(char *jsonStr, HANDSHAKE_DATA_T *handshakeData)
     handshakeData->arstream_max_ack_interval = cJSON_GetObjectItem(root, "arstream_max_ack_interval")->valueint;
     handshakeData->c2d_update_port = cJSON_GetObjectItem(root, "c2d_update_port")->valueint;
     handshakeData->c2d_user_port = cJSON_GetObjectItem(root, "c2d_user_port")->valueint;
+    if ( NULL != cJSON_GetObjectItem(root, "arstream2_server_stream_port"))
+       handshakeData->arstream2_server_stream_port = cJSON_GetObjectItem(root, "arstream2_server_stream_port")->valueint;
+    if ( NULL != cJSON_GetObjectItem(root, "arstream2_server_control_port"))
+       handshakeData->arstream2_server_control_port = cJSON_GetObjectItem(root, "arstream2_server_control_port")->valueint;
+    if ( NULL != cJSON_GetObjectItem(root, "arstream2_max_packet_size"))
+       handshakeData->arstream2_max_packet_size = cJSON_GetObjectItem(root, "arstream2_max_packet_size")->valueint;
+    if ( NULL != cJSON_GetObjectItem(root, "arstream2_max_bitrate"))
+       handshakeData->arstream2_max_bitrate = cJSON_GetObjectItem(root, "arstream2_max_bitrate")->valueint;
+
     cJSON_Delete(root);
     return 0;
 }
@@ -52,6 +63,9 @@ void * handshakeWithdrone(char *droneIp, uint16_t dronePort, HANDSHAKE_DATA_T *h
 	strncpy(handshakeRequest.controller_name, CONTROLLER_NAME, 64);
 	strncpy(handshakeRequest.controller_type, CONTROLLER_TYPE, 64);
 	handshakeRequest.d2c_port = D2C_PORT;
+	handshakeRequest.arstream2_client_stream_port = 5004;
+	handshakeRequest.arstream2_client_control_port = 5005;
+
 
 	jsonStr = convertToJson(&handshakeRequest);
 	if (NULL == jsonStr) {

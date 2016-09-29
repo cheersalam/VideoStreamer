@@ -30,12 +30,19 @@ int32_t read4Bytetoint32(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint32_
 	if ((NULL == buffer) || ((*pos + 4) > buffLen)) {
 		return -1;
 	}
-	*outVal = ((buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3]);
+	*outVal = ((buffer[*pos] << 24) | (buffer[*pos + 1] << 16) | (buffer[*pos + 2] << 8) | buffer[*pos + 3]);
 	*pos += 4;
 	return 0;
 }
 
-
+int32_t readShortToShort(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint16_t *outVal) {
+	if ((NULL == buffer) || ((*pos + 2) > buffLen)) {
+		return -1;
+	}
+	*outVal = (buffer[*pos] << 8) | buffer[*pos + 1];
+	*pos += 2;
+	return 0;
+}
 
 int32_t readXBytestoint32(uint8_t *buffer, int32_t buffLen, int32_t xBytes, int32_t *pos, uint32_t *outVal) {
 	int32_t i = 0;
