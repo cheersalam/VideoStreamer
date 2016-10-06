@@ -8,7 +8,7 @@
 #include <sys/time.h>
 
 // 1byte to uint32
-int32_t read1Bytetoint32(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint32_t *outVal) {
+int32_t read1Bytetoint32(uint8_t *buffer, uint32_t buffLen, uint32_t *pos, uint32_t *outVal) {
 	if ( (NULL == buffer) || (*pos > buffLen)) {
 		return -1;
 	}
@@ -17,7 +17,7 @@ int32_t read1Bytetoint32(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint32_
 }
 
 // 1 byte to uint8_t
-int32_t read1Byteto1Byte(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint8_t *outVal) {
+int32_t read1Byteto1Byte(uint8_t *buffer, uint32_t buffLen, uint32_t *pos, uint8_t *outVal) {
 	if ((NULL == buffer) || (*pos > buffLen)) {
 		return -1;
 	}
@@ -26,7 +26,7 @@ int32_t read1Byteto1Byte(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint8_t
 }
 
 // 4byte to uint32
-int32_t read4Bytetoint32(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint32_t *outVal) {
+int32_t read4Bytetoint32(uint8_t *buffer, uint32_t buffLen, uint32_t *pos, uint32_t *outVal) {
 	if ((NULL == buffer) || ((*pos + 4) > buffLen)) {
 		return -1;
 	}
@@ -35,7 +35,7 @@ int32_t read4Bytetoint32(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint32_
 	return 0;
 }
 
-int32_t readShortToShort(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint16_t *outVal) {
+int32_t readShortToShort(uint8_t *buffer, uint32_t buffLen, uint32_t *pos, uint16_t *outVal) {
 	if ((NULL == buffer) || ((*pos + 2) > buffLen)) {
 		return -1;
 	}
@@ -44,8 +44,8 @@ int32_t readShortToShort(uint8_t *buffer, int32_t buffLen, int32_t *pos, uint16_
 	return 0;
 }
 
-int32_t readXBytestoint32(uint8_t *buffer, int32_t buffLen, int32_t xBytes, int32_t *pos, uint32_t *outVal) {
-	int32_t i = 0;
+int32_t readXBytestoint32(uint8_t *buffer, uint32_t buffLen, uint32_t xBytes, int32_t *pos, uint32_t *outVal) {
+	uint32_t i = 0;
 	*outVal = 0;
 	if ((NULL == buffer) || (xBytes > 4) || (xBytes <= 0) || ((*pos + xBytes) > buffLen)) {
 		return -1;
