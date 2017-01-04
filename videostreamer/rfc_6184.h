@@ -16,15 +16,18 @@ typedef struct PACKET_T {
     uint32_t timestamp;
     uint32_t seqNum;
     unsigned char *buffer;
+    size_t len;
+    size_t maxLen;
 }PACKET_T;
 
 typedef struct RFC_6814_HANDLE_T {
-    PACKET_T *firstPacket;
-    PACKET_T *secondPacket;
+    PACKET_T *packet[2];
+    uint32_t packetIndex;
+    uint32_t firstPacketPos;
     uint32_t lastSeqNum;
     uint32_t lastTimestamp;
 }RFC_6814_HANDLE_T;
 
 
-int32_t rtpPacket(unsigned char *buffer, uint32_t bufLen, unsigned char *nalPacket, uint32_t nalPacketLen);
+int32_t rtpPacket(RFC_6814_HANDLE_T *handle, unsigned char *buffer, uint32_t bufLen, PACKET_T **nalPacket);
 

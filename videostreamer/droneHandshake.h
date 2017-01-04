@@ -13,7 +13,7 @@
 
 #define CONTROLLER_NAME "toto"
 #define CONTROLLER_TYPE "tata"
-#define D2C_PORT 43210
+#define D2C_PORT 43215
 
 typedef struct HANDSHAKE_DATA_T {
 	int32_t status;

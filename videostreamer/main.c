@@ -14,11 +14,13 @@
 #include "socklibCommon.h"
 #include "droneHandshake.h"
 #include "droneCommandHandler.h"
+#include "droneVideoStreamHandler.h"
 #include "utilities/parrot.h"
 #include "utilities/utilities.h"
 #include "VideoContainerGenerator.h"
 #include "ffmpegDecoder.h"
 #include "createPlaylist.h"
+#include "rfc_6184.h"
 
 #define MAX_RTP_FRAME_LEN (5 * 1024 * 1024)
 
@@ -48,6 +50,7 @@ typedef struct GLOBALARGS_T{
     char *playlistFilePath; // -v output file path
 }GLOBALARGS_T;
 
+#if 0
 typedef struct RTP_HEADER_T{
     int32_t markerBit;
     int32_t csrcCount;
@@ -57,7 +60,7 @@ typedef struct RTP_HEADER_T{
     int32_t ssrc;
     int32_t csrc[16];
 }RTP_HEADER_T;
-
+#endif
 
 static const char *optString = "i:p:f:d:";
 
@@ -82,6 +85,7 @@ void *droneHandle = NULL;
 void *vcg = NULL;
 void *display = NULL;
 void *playlist = NULL;
+void *rfc6814Handle = NULL;
 struct sigaction sigact;
 static GLOBALARGS_T globalArgs;
 
@@ -121,6 +125,7 @@ int32_t main(int argc, char **argv) {
     int32_t err = 0;
     int32_t c = 0;
     void *handshakeHandle = NULL;
+    void *streamHandle = NULL;
     HANDSHAKE_DATA_T handshakeData = { 0 };
     char *droneIp = "192.168.42.1";
     uint32_t dronePort = 44444;
@@ -131,8 +136,8 @@ int32_t main(int argc, char **argv) {
     globalArgs.outputFilePath = "/var/www/html/parrot";
     globalArgs.playlistFileName = "parrot";
     globalArgs.playlistFilePath = "/var/www/html/parrot";
-    globalArgs.enableFileSave = 1;
-    globalArgs.enableHls = 1;
+    globalArgs.enableFileSave = 0;
+    globalArgs.enableHls = 0;
     globalArgs.enableDisplay = 0;
     globalArgs.segmentDuration = 1;
 
@@ -197,7 +202,7 @@ int32_t main(int argc, char **argv) {
 
         case 'r':
             printf("Enabling Display \n");
-            globalArgs.enableDisplay = 0;
+            globalArgs.enableDisplay = 1;
             break;
 
         case 't':
@@ -219,17 +224,33 @@ int32_t main(int argc, char **argv) {
     }
     printSettings(&globalArgs);
     initSignals();
+
+#if 1
     handshakeHandle = handshakeWithdrone(globalArgs.ipAddress, globalArgs.port, &handshakeData);
     if (NULL == handshakeHandle) {
         printf("Handshake failed. Exit\n");
         return 0;
     }
 
-    droneHandle = initDroneComm(globalArgs.ipAddress, handshakeData.c2d_port, D2C_PORT, handshakeData.arstream2_server_stream_port, handshakeData.arstream2_server_control_port,
-            &streamData, &rtpData, &rtcpData);
+    droneHandle = initDroneComm(globalArgs.ipAddress, handshakeData.c2d_port, D2C_PORT, &streamData);
     if (NULL == droneHandle) {
         printf("initDroneComm failed. Exit\n");
         return 0;
+    }
+#endif
+
+
+    rfc6814Handle = initRFC6814();
+    if(rfc6814Handle == NULL) {
+        printf("initRFC6814 failed exiting\n");
+        return 0;
+    }
+
+
+   streamHandle = initDroneVideoStreams(globalArgs.ipAddress, handshakeData.arstream2_server_stream_port, handshakeData.arstream2_server_control_port, rtpData, rtcpData);
+   //streamHandle = initDroneVideoStreams("localhost", 5004, 5005, rtpData, rtcpData);
+    if (NULL == streamHandle) {
+        printf("Drone will not receive video stream. Exit\n");
     }
 
     vcg = initContainer(640, 368, VCG_CONTAINER_MPEGTS, VCG_CODEC_ID_NONE,
@@ -240,8 +261,8 @@ int32_t main(int argc, char **argv) {
     }
 
     if(globalArgs.enableDisplay) {
-        display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 1920, 1080);
-    //  display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 640, 368);
+   //     display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 1920, 1080);
+      display = initDisplay(640, 368, AV_PIX_FMT_YUV420P, 640, 368);
         if (display == NULL) {
             printf("failed in creating a display\n");
             return 1;
@@ -301,7 +322,7 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
             break;
 
         case P_DATA_TYPE_LOW_LATENCT_DATA:
-            //printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
+            printf("P_DATA_TYPE_LOW_LATENCT_DATA \n");
             readXBytestoint32(buffer, bufLen, 4, &pos, &frameNum);
             //printf("frameNum = %d size = %d frameSize = %d\n", frameNum, size, bufLen - pos);
 
@@ -333,6 +354,22 @@ static void streamData(unsigned char *buffer, int32_t bufLen) {
     }
 }
 
+static void rtpData(unsigned char *buffer, int32_t bufLen) {
+    int32_t err = 0;
+    PACKET_T *nalPacket = NULL;
+    err = rtpPacket(rfc6814Handle, buffer, bufLen, &nalPacket);
+    if (err == -1) {
+        printf("rtpPacket failed\n");
+    }
+    else if(err == 0) {
+        printf("rtpPacket success but no packets available\n");
+    }
+    else {
+        printf("rtpPacket success packets available = %d\n", err);
+    }
+}
+
+#if 0
 static void rtpData(unsigned char *buffer, int32_t bufLen) {
     uint32_t pos = 0;
     int32_t err;
@@ -381,6 +418,8 @@ static void rtpData(unsigned char *buffer, int32_t bufLen) {
         printf("rtpFrameLen = %d\n", rtpFrameLen);
     }
 }
+#endif
+
 
 static void rtcpData(unsigned char *buffer, int32_t bufLen) {
     int32_t pos = 0;

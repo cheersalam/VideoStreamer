@@ -6,6 +6,7 @@
 #define VS_UTILITIES_H
 
 #include "stdint.h"
+#include "memoryManagement.h"
 
 // 1byte to uint32
 int32_t read1Bytetoint32(uint8_t *buffer, uint32_t buffLen, uint32_t *pos, uint32_t *outVal);

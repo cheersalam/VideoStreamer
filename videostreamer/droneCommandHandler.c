@@ -11,17 +11,13 @@
 #include "droneCommandHandler.h"
 #include "udpClientSocket.h"
 #include "udpServerSocket.h"
-#include "utilities/parrot.h"
-#include "utilities/utilities.h"
 
 typedef struct DRONE_SOCKET_HANDLES {
     void *senderHandle;
     void *receiverHandle;
-    void *rtpHandle;
-    void *rtcpHandle;
 }DRONE_SOCKET_HANDLES;
 
-void *initDroneComm(char *droneIp, uint16_t dronePort, uint16_t receiverPort, uint16_t rtpPort, uint16_t rtcpPort, RECEIVER_CB streamCallback, RECEIVER_CB rtpCallback, RECEIVER_CB rtcpCallback) {
+void *initDroneComm(char *droneIp, uint16_t commandPort, uint16_t receiverPort, RECEIVER_CB receiverCallback) {
     DRONE_SOCKET_HANDLES *droneSocketHandles = NULL;
     
     printf("%s:%s:%d\n", __FILE__, __func__, __LINE__);
@@ -30,45 +26,39 @@ void *initDroneComm(char *droneIp, uint16_t dronePort, uint16_t receiverPort, ui
         return NULL;
     }
     
-    droneSocketHandles->senderHandle = initUdpClientSocket(dronePort, droneIp, NULL);
+    droneSocketHandles->senderHandle = initUdpClientSocket(commandPort, droneIp, NULL);
     if (NULL == droneSocketHandles->senderHandle) {
+        free(droneSocketHandles);
+        printf("Drone command channel socket connection failed. Exit\n");
         return NULL;
     }
 
-    droneSocketHandles->receiverHandle = initUdpServerSocket(receiverPort, droneIp, streamCallback);
+    droneSocketHandles->receiverHandle = initUdpServerSocket(receiverPort, droneIp, receiverCallback);
     if (NULL == droneSocketHandles->receiverHandle)
     {
         closeUdpClient(droneSocketHandles->senderHandle);
-        printf("Start Receiver failed. Exit\n");
-        return 0;
+        free(droneSocketHandles);
+        printf("Drone receiver channel socket connection failed. Exit\n");
+        return NULL;
     }
-   
-/*    if (rtpPort) {
-        droneSocketHandles->rtpHandle = initUdpServerSocket(rtpPort, droneIp, rtpCallback);
-        if (NULL == droneSocketHandles->rtpHandle) {
-            printf("RTP socket failed\n");
-        }
-    }
-
-    if (rtcpPort) {
-        droneSocketHandles->rtcpHandle = initUdpServerSocket(rtcpPort, droneIp, rtcpCallback);
-        if (NULL == droneSocketHandles->rtcpHandle) {
-            printf("RTCP socket failed\n");
-        }
-    }*/
-
     return droneSocketHandles;
 }
 
 int32_t startVideoStreaming(void *handle) {
     DRONE_SOCKET_HANDLES *droneSocketHandles = handle;
     unsigned char buffer[] = {0x04, 0x0b, 0x01, 0x0c, 0x00, 0x00, 0x00, 0x01, 0x15, 0x00, 0x00, 0x01};
-    return sendClientUdpData(droneSocketHandles->senderHandle, buffer, 0x0c);
+
+    if( NULL != handle)
+        return sendClientUdpData(droneSocketHandles->senderHandle, buffer, 0x0c);
+    return -1;
 }
 
 void sendAck(void *handle, unsigned char *buffer, int32_t bufLen) {
     DRONE_SOCKET_HANDLES *droneSocketHandles = handle;
     unsigned char ackBuffer[8] = {0};
+
+    if( NULL == handle)
+        return;
 
     memcpy(ackBuffer, buffer, 8);
     ackBuffer[0] = '1'; //ack ID
@@ -80,3 +70,13 @@ void sendAck(void *handle, unsigned char *buffer, int32_t bufLen) {
    }
 }
 
+void closeDroneComm(void *handle) {
+    DRONE_SOCKET_HANDLES *droneSocketHandles = handle;
+
+    if( NULL == handle)
+        return;
+
+    closeUdpClient(droneSocketHandles->senderHandle);
+    closeUdpClient(droneSocketHandles->receiverHandle);
+    free(droneSocketHandles);
+}

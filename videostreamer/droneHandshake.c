@@ -30,8 +30,8 @@ int32_t parseJsonToHandshakeData(char *jsonStr, HANDSHAKE_DATA_T *handshakeData)
     handshakeData->arstream_fragment_size = cJSON_GetObjectItem(root, "arstream_fragment_size")->valueint;
     handshakeData->arstream_fragment_maximum_number = cJSON_GetObjectItem(root, "arstream_fragment_maximum_number")->valueint;
     handshakeData->arstream_max_ack_interval = cJSON_GetObjectItem(root, "arstream_max_ack_interval")->valueint;
-    handshakeData->c2d_update_port = cJSON_GetObjectItem(root, "c2d_update_port")->valueint;
-    handshakeData->c2d_user_port = cJSON_GetObjectItem(root, "c2d_user_port")->valueint;
+    handshakeData->c2d_update_port = cJSON_GetObjectItem(root, "c2d_port")->valueint;
+//    handshakeData->c2d_user_port = cJSON_GetObjectItem(root, "c2d_user_port")->valueint;
     if ( NULL != cJSON_GetObjectItem(root, "arstream2_server_stream_port"))
        handshakeData->arstream2_server_stream_port = cJSON_GetObjectItem(root, "arstream2_server_stream_port")->valueint;
     if ( NULL != cJSON_GetObjectItem(root, "arstream2_server_control_port"))

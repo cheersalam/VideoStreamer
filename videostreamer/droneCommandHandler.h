@@ -18,15 +18,16 @@ typedef struct COMMAND_DATA_T {
     char        shortErrMsg[512];
     int32_t     running;
     uint16_t    port;
-	int32_t		fd;
+    int32_t     fd;
     pthread_t   threadId;
     struct sockaddr_in serverAddr;
 }COMMAND_DATA_T;
 #endif
 
 void *startDroneCommandHandler(unsigned char *droneIp, uint16_t dronePort);
-void *initDroneComm(char *droneIp, uint16_t senderPort, uint16_t receiverPort, uint16_t rtpPort, uint16_t rtcpPort, RECEIVER_CB streamCallback, RECEIVER_CB rtpCallback, RECEIVER_CB rtcpCallback);
+void *initDroneComm(char *droneIp, uint16_t commandPort, uint16_t receiverPort, RECEIVER_CB receiverCallback);
 int32_t startVideoStreaming(void *handle);
 void sendAck(void *handle, unsigned char *buffer, int32_t bufLen);
+void closeDroneComm(void *handle);
 
 #endif //DRONE_COMMAND_HANDLER_H
