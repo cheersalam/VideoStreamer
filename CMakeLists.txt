@@ -125,7 +125,7 @@ set(SOCK_LIB libsocklib.a)
 #------------------------------------------------------------------------------
 # Adding ffmpegWrapper lib
 #------------------------------------------------------------------------------
-set(VCG_LIB libffmpegWrapper.a)
+set(VCG_LIB libffmpegWrapper.a -lm)
 
 #------------------------------------------------------------------------------
 # Add all servers lib dependecies here. (/trunk/src/servers) 
