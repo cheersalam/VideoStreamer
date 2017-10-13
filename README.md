@@ -16,6 +16,9 @@ A fun project to receive video stream from **Parrot Drone** and render it on scr
  * `libsdl-dev` for rendering  
  * `lighttpd` for web server (HLS streaming)
 
+Ensure gcc compiler is installed. If not, run:
+  `sudo apt-get install build-essential`
+And run the following to install all of the above dependencies.
   `sudo apt-get install cmake yasm libsdl-dev lighttpd`
 
 
